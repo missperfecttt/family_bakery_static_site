@@ -1,0 +1,1720 @@
+<!-- Chosen Palette: Warm Cream & Golden Yellow Bakery (Background: #FFFDF5, Surfaces: #FFF9E6/#FEF08A, Text: #291E13/#6E5C4F, Accent: #EAB308/#D97706, Header/Footer: #291E13) -->
+<!-- Application Structure Plan: Single-page interactive web application updated with full tri-lingual internationalization (English, Amharic/አማርኛ, Afaan Oromoo) allowing instant runtime language switching across all sections, hero copy, menu items, gallery items, and branch details. Maintained direct telephone ordering CTAs, visual gallery with photo lightbox modal (prepped for direct Google Review photos integration), dynamic menu category tabs with live client-side search, Chart.js rating visualizer, and live branch operating hours status logic. -->
+<!-- Visualization & Content Choices: 1. Tri-Lingual State Switcher -> Custom I18N JS dictionary powering real-time DOM translation & dynamic menu re-rendering across EN, AM, and OM languages without page reload. 2. Menu Catalog -> Category filtering + live text search -> Client-side lookup. 3. Ratings Comparison -> Chart.js Canvas bar chart -> Responsive container. 4. Visual Gallery & Google Reviews Photos -> Lightbox modal -> Full resolution photo view. CONFIRMING: NO SVG graphics used. NO Mermaid JS used. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<!-- Brand asset: family-bakery-logo.png supplied by the site owner. -->
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Bakery | ፋሚሊ ዳቦ ቤት - Bethel, Addis Ababa</title>
+  <link rel="icon" type="image/png" href="family-bakery-logo.png" />
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN for Canvas Visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Font Awesome Web Font Icons (CSS Glyph Rendering) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Google Fonts: Playfair Display (Serif) & Plus Jakarta Sans (Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500..900;1,500..900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind Custom Theme Configuration -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bakeryBg: '#FFFDF5',
+            bakerySurface: '#FFF9E6',
+            bakeryCard: '#FFFFFF',
+            bakeryDark: '#291E13',
+            bakeryTaupe: '#6E5C4F',
+            bakeryYellow: '#FACC15',
+            bakeryYellowGold: '#EAB308',
+            bakeryAmber: '#FEF08A',
+            bakeryAccent: '#D97706',
+            bakeryBorder: '#F3E8C4',
+            bakeryEspresso: '#1F150C',
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Full-page immersive logo atmosphere */
+    #site-atmosphere, #site-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+      overflow: hidden;
+    }
+    #site-atmosphere {
+      background-image: url("family-bakery-logo.png");
+      background-size: 330px auto;
+      background-repeat: repeat;
+      background-position: center;
+      opacity: 0.075;
+      filter: saturate(1.08) contrast(1.08);
+      transform: rotate(-2deg) scale(1.10);
+      animation: logoDrift 28s linear infinite;
+      mix-blend-mode: multiply;
+    }
+    #site-glow {
+      z-index: 29;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(250,204,21,.18), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(217,119,6,.15), transparent 23%),
+        radial-gradient(circle at 50% 90%, rgba(234,179,8,.13), transparent 30%),
+        radial-gradient(circle at 50% 45%, rgba(255,255,255,.35), transparent 48%);
+      animation: glowPulse 10s ease-in-out infinite alternate;
+      mix-blend-mode: multiply;
+    }
+    @keyframes logoDrift {
+      0% { background-position: 0 0; }
+      50% { background-position: 130px 70px; }
+      100% { background-position: 260px 140px; }
+    }
+    @keyframes glowPulse {
+      0% { opacity: .55; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.07); }
+    }
+    .brand-logo {
+      display: block;
+      width: 154px;
+      height: 62px;
+      object-fit: contain;
+      object-position: center;
+      border-radius: 12px;
+      filter: drop-shadow(0 3px 8px rgba(41,30,19,.10));
+    }
+    .footer-brand-logo {
+      width: 150px;
+      height: 62px;
+      border-radius: 12px;
+    }
+    @media (max-width: 640px) {
+      .brand-logo { width: 128px; height: 54px; }
+      .footer-brand-logo { width: 140px; height: 58px; }
+      #site-atmosphere { background-size: 210px auto; opacity: .028; }
+    }
+
+    /* Minimal Custom Utility Classes for Layout Constraints & Modal Interactions */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 280px;
+      max-height: 380px;
+    }
+    @media (min-width: 768px) {
+      .chart-container {
+        height: 320px;
+      }
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #FFF9E6;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #EAB308;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-bakeryBg text-bakeryDark font-sans antialiased selection:bg-bakeryAmber selection:text-bakeryDark">
+  <div id="site-glow" aria-hidden="true"></div>
+  <div id="site-atmosphere" aria-hidden="true"></div>
+
+  <!-- GLOBAL NAVIGATION HEADER -->
+  <header id="main-header" class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-bakeryBorder transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        
+    <!-- Brand Identity -->
+    <a href="#hero" class="flex items-center gap-3 group" aria-label="Family Bakery home">
+      <img src="family-bakery-logo.png" alt="ፋሚሊ Family Bakery logo" class="brand-logo" />
+    </a>
+
+    <!-- Desktop Navigation Links -->
+    <nav class="hidden md:flex items-center gap-1 lg:gap-2">
+      <a href="#hero" data-i18n="nav_home" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryAmber/50 rounded-lg transition-colors">Home</a>
+      <a href="#features" data-i18n="nav_highlights" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryAmber/50 rounded-lg transition-colors">Highlights</a>
+      <a href="#about" data-i18n="nav_about" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryAmber/50 rounded-lg transition-colors">About</a>
+      <a href="#menu" data-i18n="nav_menu" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryAmber/50 rounded-lg transition-colors">Menu</a>
+      <a href="#gallery" data-i18n="nav_gallery" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryAmber/50 rounded-lg transition-colors">Gallery</a>
+      <a href="#reviews" data-i18n="nav_reviews" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryAmber/50 rounded-lg transition-colors">Reviews</a>
+      <a href="#locations" data-i18n="nav_locations" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryAmber/50 rounded-lg transition-colors">Locations</a>
+    </nav>
+
+    <!-- Right Header Options: Language Switcher & Call CTA -->
+    <div class="hidden sm:flex items-center gap-3">
+      
+      <!-- Tri-Lingual Language Switcher Pill (Desktop) -->
+      <div class="flex items-center bg-bakerySurface border border-bakeryBorder rounded-xl p-1 text-xs font-bold shadow-inner">
+        <button data-lang="en" class="lang-btn px-2.5 py-1 rounded-lg transition-all bg-bakeryDark text-white shadow-sm">EN</button>
+        <button data-lang="am" class="lang-btn px-2.5 py-1 rounded-lg transition-all text-bakeryDark hover:bg-bakeryAmber">አማ</button>
+        <button data-lang="om" class="lang-btn px-2.5 py-1 rounded-lg transition-all text-bakeryDark hover:bg-bakeryAmber">OM</button>
+      </div>
+
+      <a href="tel:0911641614" class="inline-flex items-center gap-2 bg-bakeryYellowGold hover:bg-bakeryAccent text-bakeryDark hover:text-white px-4 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-all transform hover:-translate-y-0.5">
+        <i class="fa-solid fa-phone text-xs"></i>
+        <span>0911 641 614</span>
+      </a>
+    </div>
+
+    <!-- Mobile Menu Hamburger Button -->
+    <button id="mobile-menu-btn" type="button" class="md:hidden p-2 rounded-lg text-bakeryDark hover:bg-bakerySurface focus:outline-none" aria-label="Toggle Navigation Menu">
+      <i id="menu-icon-open" class="fa-solid fa-bars text-xl"></i>
+      <i id="menu-icon-close" class="fa-solid fa-xmark text-xl hidden"></i>
+    </button>
+
+  </div>
+</div>
+
+<!-- Mobile Drawer Navigation -->
+<div id="mobile-menu" class="hidden md:hidden bg-white border-b border-bakeryBorder px-4 pt-2 pb-6 space-y-3">
+  
+  <!-- Mobile Language Switcher Toolbar -->
+  <div class="flex items-center justify-between pb-2 border-b border-bakeryBorder">
+    <span class="text-xs font-bold text-bakeryTaupe uppercase tracking-wider" data-i18n="lang_label">Language / ቋንቋ / Afaan</span>
+    <div class="flex items-center bg-bakerySurface border border-bakeryBorder rounded-xl p-1 text-xs font-bold">
+      <button data-lang="en" class="lang-btn px-3 py-1 rounded-lg transition-all bg-bakeryDark text-white">EN</button>
+      <button data-lang="am" class="lang-btn px-3 py-1 rounded-lg transition-all text-bakeryDark hover:bg-bakeryAmber">አማ</button>
+      <button data-lang="om" class="lang-btn px-3 py-1 rounded-lg transition-all text-bakeryDark hover:bg-bakeryAmber">OM</button>
+    </div>
+  </div>
+
+  <a href="#hero" data-i18n="nav_home" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Home</a>
+  <a href="#features" data-i18n="nav_highlights" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Highlights</a>
+  <a href="#about" data-i18n="nav_about" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">About</a>
+  <a href="#menu" data-i18n="nav_menu" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Menu</a>
+  <a href="#gallery" data-i18n="nav_gallery" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Gallery</a>
+  <a href="#reviews" data-i18n="nav_reviews" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Reviews</a>
+  <a href="#locations" data-i18n="nav_locations" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Locations</a>
+  
+  <div class="pt-3 border-t border-bakeryBorder flex flex-col gap-2">
+    <a href="tel:0911641614" class="flex items-center justify-center gap-2 bg-bakeryYellowGold text-bakeryDark py-3 rounded-xl font-bold text-sm">
+      <i class="fa-solid fa-phone"></i>
+      <span data-i18n="call_bethel_main">Call Bethel Branch: 0911 641 614</span>
+    </a>
+    <a href="tel:0966334337" class="flex items-center justify-center gap-2 bg-bakerySurface text-bakeryDark py-3 rounded-xl font-bold text-sm">
+      <i class="fa-solid fa-phone"></i>
+      <span data-i18n="call_bethel_square">Call Bethel Square: 0966 334 337</span>
+    </a>
+  </div>
+</div>
+  </header>
+
+  <!-- MAIN APPLICATION CONTENT CONTAINER -->
+  <main class="pt-20">
+
+<!-- SECTION 1: HERO SECTION -->
+<section id="hero" class="relative py-14 lg:py-24 overflow-hidden bg-gradient-to-b from-bakerySurface via-bakerySurface/60 to-bakeryBg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <!-- Hero Copy Column -->
+      <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+        
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-bakeryAmber/80 border border-bakeryYellowGold/40 text-bakeryDark text-xs font-semibold uppercase tracking-wider">
+          <i class="fa-solid fa-location-dot text-bakeryAccent"></i>
+          <span data-i18n="hero_badge">Artisanal Neighborhood Bakery • Bethel, Addis Ababa</span>
+        </div>
+
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-bakeryDark tracking-tight leading-[1.15]">
+          <span data-i18n="hero_title_1">Freshly Baked Everyday.</span> <br class="hidden sm:inline" />
+          <span data-i18n="hero_title_2" class="italic font-normal text-bakeryAccent">Crafted for Every Moment.</span>
+        </h1>
+
+        <p data-i18n="hero_subtitle" class="text-base sm:text-lg text-bakeryTaupe max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+          Experience warm artisan breads, buttery pastries, celebration cakes, and traditional treats prepared fresh every single morning in Bethel, Addis Ababa.
+        </p>
+
+        <!-- CTA Actions -->
+        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+          <a href="#menu" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-bakeryYellowGold hover:bg-bakeryAccent text-bakeryDark hover:text-white px-8 py-3.5 rounded-xl font-bold text-base shadow-md transition-all transform hover:-translate-y-0.5">
+            <span data-i18n="btn_explore_menu">Explore Daily Menu</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </a>
+          <a href="#locations" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder px-8 py-3.5 rounded-xl font-bold text-base transition-all">
+            <i class="fa-solid fa-store text-bakeryYellowGold"></i>
+            <span data-i18n="btn_visit_bakery">Visit Our Bakery</span>
+          </a>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="pt-6 border-t border-bakeryBorder/80 grid grid-cols-3 gap-4 text-center lg:text-left max-w-lg mx-auto lg:mx-0">
+          <div>
+            <span data-i18n="stat_branches_val" class="block text-2xl font-serif font-bold text-bakeryDark">2 Branches</span>
+            <span data-i18n="stat_branches_lbl" class="text-xs text-bakeryTaupe font-medium">Bethel Area Locations</span>
+          </div>
+          <div>
+            <span data-i18n="stat_fresh_val" class="block text-2xl font-serif font-bold text-bakeryDark">Daily Fresh</span>
+            <span data-i18n="stat_fresh_lbl" class="text-xs text-bakeryTaupe font-medium">Early Morning Batches</span>
+          </div>
+          <div>
+            <span data-i18n="stat_rating_val" class="block text-2xl font-serif font-bold text-bakeryDark">4.6 Score</span>
+            <span data-i18n="stat_rating_lbl" class="text-xs text-bakeryTaupe font-medium">Verified Customer Rating</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Hero Graphic Column -->
+      <div class="lg:col-span-5 relative">
+        <div class="relative mx-auto max-w-md lg:max-w-none">
+          
+          <!-- Card Framing Overlay -->
+          <div class="bg-white rounded-3xl p-5 shadow-xl border border-bakeryBorder space-y-4">
+            <div class="relative aspect-[4/3] rounded-2xl overflow-hidden bg-bakerySurface">
+              <img id="hero-main-image" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80" alt="Fresh Bakery Breads Display" class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500" />
+              <div class="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3.5 py-1 rounded-full text-xs font-bold text-bakeryDark shadow-sm font-serif">
+                <span data-i18n="hero_card_tag">Warm & Fresh</span>
+              </div>
+            </div>
+
+            <!-- Featured Highlight Pill inside Card -->
+            <div class="flex items-center justify-between p-3.5 bg-bakerySurface rounded-xl border border-bakeryBorder">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-bakeryYellow/30 text-bakeryAccent flex items-center justify-center font-bold">
+                  <i class="fa-solid fa-bread-slice"></i>
+                </div>
+                <div>
+                  <h3 data-i18n="hero_pill_sub" class="text-xs font-bold text-bakeryDark uppercase tracking-wider">Morning Specialty</h3>
+                  <p data-i18n="hero_pill_title" class="text-sm font-serif font-bold text-bakeryDark">Artisan Breads & Rolls</p>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-bakeryDark bg-bakeryAmber px-3 py-1 rounded-lg border border-bakeryYellowGold/40">Bethel</span>
+            </div>
+          </div>
+
+          <!-- Floating Accent Badge -->
+          <div class="absolute -bottom-5 -left-5 bg-bakeryEspresso text-white p-4.5 rounded-2xl shadow-2xl border border-white/10 hidden sm:flex items-center gap-3 max-w-xs">
+            <div class="w-10 h-10 rounded-xl bg-bakeryYellowGold flex items-center justify-center text-bakeryDark font-bold shrink-0">
+              <i class="fa-solid fa-clock text-lg"></i>
+            </div>
+            <div>
+              <p data-i18n="hero_hours_title" class="text-xs text-white/70 font-medium">Daily Opening Hours</p>
+              <p class="text-xs font-bold text-bakeryAmber">6:00 AM – 10:00 PM</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: QUICK BUSINESS INFORMATION -->
+<section id="features" class="py-16 bg-white border-y border-bakeryBorder">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <h2 data-i18n="feat_header_tag" class="text-xs font-extrabold uppercase tracking-widest text-bakeryAccent mb-2">Neighborhood Quality</h2>
+      <p data-i18n="feat_header_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark">Everything You Need From Your Local Bakery</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      
+      <!-- Card 1 -->
+      <div class="bg-bakeryBg rounded-2xl p-6 border border-bakeryBorder hover:border-bakeryYellowGold transition-all duration-300 hover:shadow-md group">
+        <div class="w-12 h-12 rounded-xl bg-bakeryAmber text-bakeryDark flex items-center justify-center text-xl font-bold mb-5 group-hover:bg-bakeryYellowGold transition-colors">
+          <i class="fa-solid fa-wheat-awn"></i>
+        </div>
+        <h3 data-i18n="feat_1_title" class="text-xl font-serif font-bold text-bakeryDark mb-2">Freshly Baked</h3>
+        <p data-i18n="feat_1_desc" class="text-sm text-bakeryTaupe leading-relaxed">
+          Warm artisan breads and rolls prepared every morning for neighborhood families.
+        </p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="bg-bakeryBg rounded-2xl p-6 border border-bakeryBorder hover:border-bakeryYellowGold transition-all duration-300 hover:shadow-md group">
+        <div class="w-12 h-12 rounded-xl bg-bakeryAmber text-bakeryDark flex items-center justify-center text-xl font-bold mb-5 group-hover:bg-bakeryYellowGold transition-colors">
+          <i class="fa-solid fa-cake-candles"></i>
+        </div>
+        <h3 data-i18n="feat_2_title" class="text-xl font-serif font-bold text-bakeryDark mb-2">Cakes & Pastries</h3>
+        <p data-i18n="feat_2_desc" class="text-sm text-bakeryTaupe leading-relaxed">
+          Delicious celebration cakes, sweet tea bites, and savory breakfast pastries.
+        </p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="bg-bakeryBg rounded-2xl p-6 border border-bakeryBorder hover:border-bakeryYellowGold transition-all duration-300 hover:shadow-md group">
+        <div class="w-12 h-12 rounded-xl bg-bakeryAmber text-bakeryDark flex items-center justify-center text-xl font-bold mb-5 group-hover:bg-bakeryYellowGold transition-colors">
+          <i class="fa-solid fa-map-pin"></i>
+        </div>
+        <h3 data-i18n="feat_3_title" class="text-xl font-serif font-bold text-bakeryDark mb-2">Bethel Locations</h3>
+        <p data-i18n="feat_3_desc" class="text-sm text-bakeryTaupe leading-relaxed">
+          Conveniently located on Bethel Main Road and near Bethel Square in Addis Ababa.
+        </p>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="bg-bakeryBg rounded-2xl p-6 border border-bakeryBorder hover:border-bakeryYellowGold transition-all duration-300 hover:shadow-md group">
+        <div class="w-12 h-12 rounded-xl bg-bakeryAmber text-bakeryDark flex items-center justify-center text-xl font-bold mb-5 group-hover:bg-bakeryYellowGold transition-colors">
+          <i class="fa-solid fa-store"></i>
+        </div>
+        <h3 data-i18n="feat_4_title" class="text-xl font-serif font-bold text-bakeryDark mb-2">Friendly Service</h3>
+        <p data-i18n="feat_4_desc" class="text-sm text-bakeryTaupe leading-relaxed">
+          Serving our community with warm hospitality and reliable phone ordering.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: ABOUT SECTION -->
+<section id="about" class="py-16 sm:py-24 bg-bakeryBg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <!-- About Image Frame -->
+      <div class="lg:col-span-5 order-2 lg:order-1">
+        <div class="relative bg-white rounded-3xl p-4 border border-bakeryBorder shadow-lg">
+          <div class="aspect-[4/3] rounded-2xl overflow-hidden bg-bakerySurface">
+            <img id="about-main-image" src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80" alt="Family Bakery Selection" class="w-full h-full object-cover" />
+          </div>
+          <div class="mt-4 p-4 bg-bakerySurface rounded-xl border border-bakeryBorder flex items-center justify-between">
+            <div>
+              <span data-i18n="about_card_tag" class="block text-xs font-bold text-bakeryAccent uppercase tracking-wider">Neighborhood Commitment</span>
+              <span data-i18n="about_card_sub" class="text-sm font-serif font-bold text-bakeryDark">Quality Ingredients & Dedicated Craft</span>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-bakeryYellowGold text-bakeryDark flex items-center justify-center text-sm font-bold">
+              <i class="fa-solid fa-check"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- About Narrative -->
+      <div class="lg:col-span-7 order-1 lg:order-2 space-y-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bakeryAmber text-bakeryDark text-xs font-semibold uppercase tracking-wider border border-bakeryYellowGold/30">
+          <i class="fa-solid fa-heart text-bakeryAccent"></i>
+          <span data-i18n="about_tag">Our Local Promise</span>
+        </div>
+
+        <h2 data-i18n="about_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark tracking-tight">
+          About Family Bakery
+        </h2>
+
+        <p data-i18n="about_desc" class="text-base sm:text-lg text-bakeryTaupe leading-relaxed font-normal">
+          Family Bakery proudly serves the Bethel community in Addis Ababa with daily fresh breads, artisan pastries, cakes, and sweet treats. Whether stopping by for breakfast, picking up warm bread for dinner, or ordering a cake for a celebration, Family Bakery provides authentic taste and friendly service.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div class="p-4 rounded-xl bg-white border border-bakeryBorder">
+            <h3 class="font-serif font-bold text-bakeryDark text-base mb-1 flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-bakeryYellowGold text-xs"></i>
+              <span data-i18n="about_sub_1_title">Daily Early Baking</span>
+            </h3>
+            <p data-i18n="about_sub_1_desc" class="text-xs text-bakeryTaupe">Warm loaves and pastries prepared early every single morning.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-white border border-bakeryBorder">
+            <h3 class="font-serif font-bold text-bakeryDark text-base mb-1 flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-bakeryYellowGold text-xs"></i>
+              <span data-i18n="about_sub_2_title">Two Bethel Locations</span>
+            </h3>
+            <p data-i18n="about_sub_2_desc" class="text-xs text-bakeryTaupe">Conveniently accessible at Bethel Main Road and Bethel Square.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: DYNAMIC MENU SECTION -->
+<section id="menu" class="py-16 sm:py-24 bg-white border-t border-bakeryBorder">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Menu Header & Controls -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+      <div>
+        <span data-i18n="menu_tag" class="text-xs font-extrabold uppercase tracking-widest text-bakeryAccent block mb-2">Bakery Catalog</span>
+        <h2 data-i18n="menu_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark">Explore Our Daily Offerings</h2>
+        <p data-i18n="menu_subtitle" class="text-sm text-bakeryTaupe mt-1">Browse our fresh breads, artisan pastries, cakes, sweets, and beverages.</p>
+      </div>
+
+      <!-- Dynamic Search Input -->
+      <div class="relative w-full md:w-72">
+        <input id="menu-search" type="text" placeholder="Search menu items..." class="w-full bg-bakeryBg border border-bakeryBorder rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-bakeryYellowGold focus:ring-1 focus:ring-bakeryYellowGold text-bakeryDark placeholder-bakeryTaupe/60" />
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-xs text-bakeryTaupe"></i>
+      </div>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-8 custom-scrollbar">
+      <button data-category="all" class="menu-tab-btn active bg-bakeryDark text-white px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all shadow-sm">
+        <span data-i18n="cat_all">All Items</span>
+      </button>
+      <button data-category="bread" class="menu-tab-btn bg-bakeryBg hover:bg-bakerySurface text-bakeryDark px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border border-bakeryBorder">
+        <span data-i18n="cat_bread">Bread</span>
+      </button>
+      <button data-category="pastries" class="menu-tab-btn bg-bakeryBg hover:bg-bakerySurface text-bakeryDark px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border border-bakeryBorder">
+        <span data-i18n="cat_pastries">Pastries</span>
+      </button>
+      <button data-category="cakes" class="menu-tab-btn bg-bakeryBg hover:bg-bakerySurface text-bakeryDark px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border border-bakeryBorder">
+        <span data-i18n="cat_cakes">Cakes</span>
+      </button>
+      <button data-category="sweets" class="menu-tab-btn bg-bakeryBg hover:bg-bakerySurface text-bakeryDark px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border border-bakeryBorder">
+        <span data-i18n="cat_sweets">Sweets</span>
+      </button>
+      <button data-category="drinks" class="menu-tab-btn bg-bakeryBg hover:bg-bakerySurface text-bakeryDark px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border border-bakeryBorder">
+        <span data-i18n="cat_drinks">Drinks</span>
+      </button>
+    </div>
+
+    <!-- Menu Product Grid -->
+    <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <!-- Populated dynamically via Vanilla JS with full language support -->
+    </div>
+
+    <!-- Empty State Container -->
+    <div id="menu-empty" class="hidden text-center py-16 bg-bakeryBg rounded-2xl border border-dashed border-bakeryBorder">
+      <div class="w-12 h-12 rounded-full bg-bakeryAmber text-bakeryDark flex items-center justify-center mx-auto mb-3 text-lg">
+        <i class="fa-solid fa-utensils"></i>
+      </div>
+      <h3 data-i18n="empty_title" class="text-lg font-serif font-bold text-bakeryDark">No menu items found</h3>
+      <p data-i18n="empty_desc" class="text-xs text-bakeryTaupe mt-1">Try searching for another keyword or selecting a different category tab.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 5: GALLERY & GOOGLE REVIEWS PHOTOS SECTION -->
+<section id="gallery" class="py-16 sm:py-24 bg-bakeryBg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <span data-i18n="gal_tag" class="text-xs font-extrabold uppercase tracking-widest text-bakeryAccent block mb-2">Visual Tour</span>
+      <h2 data-i18n="gal_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark">Bakery Gallery</h2>
+      <p data-i18n="gal_subtitle" class="text-sm text-bakeryTaupe mt-2">Explore our daily baked products, display cases, and bakery atmosphere in Bethel.</p>
+    </div>
+
+    <!-- Gallery Filter Pills -->
+    <div class="flex items-center justify-center gap-2 flex-wrap mb-8">
+      <button data-gallery-filter="all" class="gallery-filter-btn active bg-bakeryDark text-white px-4 py-2 rounded-lg text-xs font-bold transition-all">
+        <span data-i18n="gal_all">All Photos</span>
+      </button>
+      <button data-gallery-filter="breads" class="gallery-filter-btn bg-white hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder px-4 py-2 rounded-lg text-xs font-bold transition-all">
+        <span data-i18n="gal_breads">Breads</span>
+      </button>
+      <button data-gallery-filter="pastries" class="gallery-filter-btn bg-white hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder px-4 py-2 rounded-lg text-xs font-bold transition-all">
+        <span data-i18n="gal_pastries">Pastries</span>
+      </button>
+      <button data-gallery-filter="cakes" class="gallery-filter-btn bg-white hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder px-4 py-2 rounded-lg text-xs font-bold transition-all">
+        <span data-i18n="gal_cakes">Cakes</span>
+      </button>
+      <button data-gallery-filter="storefront" class="gallery-filter-btn bg-white hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder px-4 py-2 rounded-lg text-xs font-bold transition-all">
+        <span data-i18n="gal_storefront">Storefront & Interior</span>
+      </button>
+    </div>
+
+    <div class="max-w-3xl mx-auto mb-8 rounded-2xl border border-bakeryBorder bg-white/85 backdrop-blur-sm px-5 py-4 text-center shadow-sm">
+      <p class="text-xs sm:text-sm text-bakeryTaupe leading-relaxed">
+        <strong class="text-bakeryDark">Photo note:</strong> the gallery uses bakery photography for a realistic visual experience.
+        Use the button below to view the business listing and customer-uploaded photos on Google Maps.
+      </p>
+      <a href="https://www.google.com/maps/search/?api=1&query=Family+Bakery+Bethel+Addis+Ababa+Ethiopia" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 mt-3 bg-bakeryDark text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-bakeryAccent transition-colors">
+        <i class="fa-brands fa-google"></i> View Google photos & reviews
+      </a>
+    </div>
+
+    <!-- Gallery Grid -->
+    <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <!-- Gallery Items populated via JavaScript -->
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 6: VERIFIED REVIEWS & RATINGS -->
+<section id="reviews" class="py-16 sm:py-24 bg-white border-t border-bakeryBorder">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span data-i18n="rev_tag" class="text-xs font-extrabold uppercase tracking-widest text-bakeryAccent block mb-2">Customer Feedback</span>
+      <h2 data-i18n="rev_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark">Verified Branch Ratings</h2>
+      <p data-i18n="rev_subtitle" class="text-sm text-bakeryTaupe mt-2">Publicly verified customer feedback scores for our two Bethel bakery branches.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      
+      <!-- Branch Rating Scorecards Column -->
+      <div class="lg:col-span-6 space-y-6">
+        
+        <!-- Branch 1 Scorecard -->
+        <div class="bg-bakeryBg p-6 rounded-2xl border border-bakeryBorder hover:border-bakeryYellowGold transition-all">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h3 class="text-2xl font-serif font-bold text-bakeryDark">Bethel Branch</h3>
+              <p class="text-xs text-bakeryTaupe mt-0.5">Main Bethel Road, Addis Ababa</p>
+            </div>
+            <span data-i18n="verified_score_badge" class="bg-bakeryAmber text-bakeryDark text-xs font-bold px-3 py-1 rounded-full border border-bakeryYellowGold/30">Verified Score</span>
+          </div>
+
+          <div class="flex items-baseline gap-3 mb-3">
+            <span class="text-4xl font-serif font-bold text-bakeryDark">4.2</span>
+            <span class="text-sm font-semibold text-bakeryTaupe">/ 5.0</span>
+            <div class="flex items-center text-amber-500 text-sm gap-1 ml-2">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star-half-stroke"></i>
+            </div>
+          </div>
+
+          <div class="w-full bg-bakeryBorder/50 rounded-full h-2.5 mb-2 overflow-hidden">
+            <div class="bg-bakeryYellowGold h-2.5 rounded-full" style="width: 84%"></div>
+          </div>
+
+          <p data-i18n="rev_count_1" class="text-xs text-bakeryTaupe font-medium">Based on 20 verified customer reviews</p>
+        </div>
+
+        <!-- Branch 2 Scorecard -->
+        <div class="bg-bakeryBg p-6 rounded-2xl border border-bakeryBorder hover:border-bakeryYellowGold transition-all">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h3 class="text-2xl font-serif font-bold text-bakeryDark">Bethel Square Branch</h3>
+              <p class="text-xs text-bakeryTaupe mt-0.5">Around Bethel Square, Addis Ababa</p>
+            </div>
+            <span data-i18n="verified_score_badge" class="bg-bakeryAmber text-bakeryDark text-xs font-bold px-3 py-1 rounded-full border border-bakeryYellowGold/30">Verified Score</span>
+          </div>
+
+          <div class="flex items-baseline gap-3 mb-3">
+            <span class="text-4xl font-serif font-bold text-bakeryDark">5.0</span>
+            <span class="text-sm font-semibold text-bakeryTaupe">/ 5.0</span>
+            <div class="flex items-center text-amber-500 text-sm gap-1 ml-2">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+          </div>
+
+          <div class="w-full bg-bakeryBorder/50 rounded-full h-2.5 mb-2 overflow-hidden">
+            <div class="bg-bakeryYellowGold h-2.5 rounded-full" style="width: 100%"></div>
+          </div>
+
+          <p data-i18n="rev_count_2" class="text-xs text-bakeryTaupe font-medium">Based on 4 verified customer reviews</p>
+        </div>
+
+      </div>
+
+      <!-- Chart Visualizer Column -->
+      <div class="lg:col-span-6 bg-bakeryBg p-6 rounded-2xl border border-bakeryBorder">
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <h3 data-i18n="chart_title" class="text-lg font-serif font-bold text-bakeryDark">Rating Score Breakdown</h3>
+            <p data-i18n="chart_subtitle" class="text-xs text-bakeryTaupe">Average score and verified review count comparison</p>
+          </div>
+          <span data-i18n="chart_badge" class="text-xs font-bold text-bakeryDark bg-white px-3 py-1 rounded-lg border border-bakeryBorder">Chart Visualizer</span>
+        </div>
+
+        <!-- Canvas Chart Container with mandatory Tailwind constraint wrappers -->
+        <div class="chart-container">
+          <canvas id="ratingsChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 7: BRANCH LOCATIONS & DIRECT CONTACT HUB -->
+<section id="locations" class="py-16 sm:py-24 bg-bakeryBg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span data-i18n="loc_tag" class="text-xs font-extrabold uppercase tracking-widest text-bakeryAccent block mb-2">Visit & Call Us</span>
+      <h2 data-i18n="loc_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark">Bakery Locations in Bethel</h2>
+      <p data-i18n="loc_subtitle" class="text-sm text-bakeryTaupe mt-2">Visit our bakery locations or call our phone lines directly for immediate orders and inquiries.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      
+      <!-- Location Card 1: Bethel Main -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-bakeryBorder shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-3.5 py-1 rounded-full bg-bakeryAmber text-bakeryDark font-bold text-xs uppercase tracking-wider">Bethel Main</span>
+            <span id="status-bethel-main" class="px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-bold text-xs">
+              Calculating...
+            </span>
+          </div>
+
+          <h3 class="text-2xl font-serif font-bold text-bakeryDark mb-2">Family Bakery — Bethel</h3>
+          
+          <div class="space-y-4 my-6 text-sm text-bakeryTaupe">
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-location-dot text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_address" class="font-bold text-bakeryDark block">Address</span>
+                <span data-i18n="bethel_main_addr">Bethel, Main Road, Addis Ababa</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-phone text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_phone" class="font-bold text-bakeryDark block">Direct Phone Line</span>
+                <a href="tel:0911641614" class="text-bakeryDark font-bold hover:text-bakeryAccent text-base">0911 641 614</a>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-clock text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_hours" class="font-bold text-bakeryDark block">Operating Hours</span>
+                <span data-i18n="bethel_main_hours">Every day: 6:00 AM – 9:00 PM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6 border-t border-bakeryBorder flex flex-col sm:flex-row gap-3">
+          <a href="tel:0911641614" class="w-full sm:w-1/2 flex items-center justify-center gap-2 bg-bakeryYellowGold hover:bg-bakeryAccent text-bakeryDark hover:text-white py-3 px-4 rounded-xl font-bold text-sm transition-all shadow-sm">
+            <i class="fa-solid fa-phone"></i>
+            <span data-i18n="btn_call_main">Call Bethel Branch</span>
+          </a>
+          <a href="https://maps.google.com/?q=Bethel+Addis+Ababa+Ethiopia" target="_blank" rel="noopener noreferrer" class="w-full sm:w-1/2 flex items-center justify-center gap-2 bg-bakeryBg hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder py-3 px-4 rounded-xl font-bold text-sm transition-all">
+            <i class="fa-solid fa-diamond-turn-right text-bakeryAccent"></i>
+            <span data-i18n="btn_directions">Get Directions</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Location Card 2: Bethel Square -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-bakeryBorder shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-3.5 py-1 rounded-full bg-bakeryAmber text-bakeryDark font-bold text-xs uppercase tracking-wider">Bethel Square</span>
+            <span id="status-bethel-square" class="px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-bold text-xs">
+              Calculating...
+            </span>
+          </div>
+
+          <h3 class="text-2xl font-serif font-bold text-bakeryDark mb-2">Family Bakery — Bethel Square</h3>
+          
+          <div class="space-y-4 my-6 text-sm text-bakeryTaupe">
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-location-dot text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_address" class="font-bold text-bakeryDark block">Address</span>
+                <span data-i18n="bethel_square_addr">Around Bethel Square, Addis Ababa</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-phone text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_phone" class="font-bold text-bakeryDark block">Direct Phone Line</span>
+                <a href="tel:0966334337" class="text-bakeryDark font-bold hover:text-bakeryAccent text-base">0966 334 337</a>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-clock text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_hours" class="font-bold text-bakeryDark block">Operating Hours</span>
+                <span data-i18n="bethel_square_hours">Every day: 6:00 AM – 10:00 PM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6 border-t border-bakeryBorder flex flex-col sm:flex-row gap-3">
+          <a href="tel:0966334337" class="w-full sm:w-1/2 flex items-center justify-center gap-2 bg-bakeryYellowGold hover:bg-bakeryAccent text-bakeryDark hover:text-white py-3 px-4 rounded-xl font-bold text-sm transition-all shadow-sm">
+            <i class="fa-solid fa-phone"></i>
+            <span data-i18n="btn_call_square">Call Bethel Square</span>
+          </a>
+          <a href="https://maps.google.com/?q=Bethel+Square+Addis+Ababa+Ethiopia" target="_blank" rel="noopener noreferrer" class="w-full sm:w-1/2 flex items-center justify-center gap-2 bg-bakeryBg hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder py-3 px-4 rounded-xl font-bold text-sm transition-all">
+            <i class="fa-solid fa-diamond-turn-right text-bakeryAccent"></i>
+            <span data-i18n="btn_directions">Get Directions</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Direct Phone Order Callout Box -->
+    <div class="mt-12 bg-white rounded-3xl p-8 border border-bakeryBorder shadow-sm max-w-4xl mx-auto text-center space-y-4">
+      <div class="w-12 h-12 rounded-full bg-bakeryAmber text-bakeryDark flex items-center justify-center mx-auto text-xl">
+        <i class="fa-solid fa-headset"></i>
+      </div>
+      <h3 data-i18n="callout_title" class="text-2xl font-serif font-bold text-bakeryDark">Need to Place an Order or Have Questions?</h3>
+      <p data-i18n="callout_subtitle" class="text-sm text-bakeryTaupe max-w-2xl mx-auto leading-relaxed">
+        Call our team directly to check today's fresh bread batches, order custom celebration cakes, or inquire about bulk bakery items for events.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+        <a href="tel:0911641614" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-bakeryYellowGold hover:bg-bakeryAccent text-bakeryDark hover:text-white px-7 py-3 rounded-xl font-bold text-sm transition-all shadow-sm">
+          <i class="fa-solid fa-phone"></i>
+          <span>Bethel Main: 0911 641 614</span>
+        </a>
+        <a href="tel:0966334337" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-bakerySurface hover:bg-bakeryAmber text-bakeryDark px-7 py-3 rounded-xl font-bold text-sm transition-all border border-bakeryBorder">
+          <i class="fa-solid fa-phone"></i>
+          <span>Bethel Square: 0966 334 337</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+  </main>
+
+  <!-- GLOBAL FOOTER SECTION -->
+  <footer class="bg-bakeryEspresso text-white pt-16 pb-12 border-t border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 pb-12 border-b border-white/10">
+    
+    <!-- Brand Info -->
+    <div class="lg:col-span-4 space-y-4">
+      <div class="flex items-center gap-3">
+        <img src="family-bakery-logo.png" alt="ፋሚሊ Family Bakery logo" class="footer-brand-logo" />
+      </div>
+      <p data-i18n="footer_about" class="text-xs text-white/70 leading-relaxed max-w-sm">
+        Serving fresh breads, artisan pastries, custom celebration cakes, and sweet treats daily in Bethel, Addis Ababa.
+      </p>
+      <div class="text-xs text-white/50 pt-2">
+        Bethel, Addis Ababa, Ethiopia
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="lg:col-span-2 space-y-3">
+      <h4 data-i18n="footer_nav_head" class="text-xs font-bold uppercase tracking-wider text-bakeryYellow">Navigation</h4>
+      <ul class="space-y-2 text-xs text-white/80">
+        <li><a href="#hero" data-i18n="nav_home" class="hover:text-bakeryYellow transition-colors">Home</a></li>
+        <li><a href="#about" data-i18n="nav_about" class="hover:text-bakeryYellow transition-colors">About Us</a></li>
+        <li><a href="#menu" data-i18n="nav_menu" class="hover:text-bakeryYellow transition-colors">Bakery Menu</a></li>
+        <li><a href="#gallery" data-i18n="nav_gallery" class="hover:text-bakeryYellow transition-colors">Visual Gallery</a></li>
+        <li><a href="#reviews" data-i18n="nav_reviews" class="hover:text-bakeryYellow transition-colors">Verified Ratings</a></li>
+        <li><a href="#locations" data-i18n="nav_locations" class="hover:text-bakeryYellow transition-colors">Locations & Contact</a></li>
+      </ul>
+    </div>
+
+    <!-- Branch Contacts -->
+    <div class="lg:col-span-3 space-y-3">
+      <h4 data-i18n="footer_phone_head" class="text-xs font-bold uppercase tracking-wider text-bakeryYellow">Direct Phone Lines</h4>
+      <div class="space-y-2 text-xs text-white/80">
+        <p>
+          <strong class="text-white block">Bethel Branch:</strong>
+          <a href="tel:0911641614" class="hover:text-bakeryYellow font-bold">0911 641 614</a>
+        </p>
+        <p>
+          <strong class="text-white block">Bethel Square Branch:</strong>
+          <a href="tel:0966334337" class="hover:text-bakeryYellow font-bold">0966 334 337</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Operating Hours Summary -->
+    <div class="lg:col-span-3 space-y-3">
+      <h4 data-i18n="footer_hours_head" class="text-xs font-bold uppercase tracking-wider text-bakeryYellow">Operating Schedule</h4>
+      <div class="space-y-2 text-xs text-white/80">
+        <p><strong class="text-white">Bethel Main:</strong> 6:00 AM – 9:00 PM Daily</p>
+        <p><strong class="text-white">Bethel Square:</strong> 6:00 AM – 10:00 PM Daily</p>
+        <p data-i18n="footer_open_note" class="text-white/50 text-[11px] pt-1">Open 7 days a week including public holidays.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer Bottom -->
+  <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-white/50 gap-4">
+    <p>&copy; 2026 Family Bakery (ፋሚሊ ዳቦ ቤት). All rights reserved.</p>
+    <p>Bethel, Addis Ababa, Ethiopia</p>
+  </div>
+
+</div>
+  </footer>
+
+  <!-- INTERACTIVE MODAL DIALOGS -->
+
+  <!-- Item Detail Modal -->
+  <div id="item-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden border border-bakeryBorder shadow-2xl relative">
+      <button id="close-item-modal" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 text-bakeryDark hover:bg-white flex items-center justify-center shadow-md z-10">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      
+  <div id="modal-item-image-container" class="aspect-[16/9] w-full bg-bakerySurface relative overflow-hidden">
+    <img id="modal-item-image" src="" alt="" class="w-full h-full object-cover" />
+  </div>
+
+  <div class="p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <span id="modal-item-category" class="px-3 py-1 rounded-full bg-bakeryAmber text-bakeryDark font-bold text-xs uppercase tracking-wider">Category</span>
+      <span id="modal-item-price" class="text-sm font-bold text-bakeryDark bg-bakerySurface px-3 py-1 rounded-lg">ETB --.--</span>
+    </div>
+
+    <h3 id="modal-item-title" class="text-2xl font-serif font-bold text-bakeryDark">Item Title</h3>
+    <p id="modal-item-desc" class="text-sm text-bakeryTaupe leading-relaxed">Detailed item description.</p>
+
+    <div class="pt-4 border-t border-bakeryBorder flex items-center justify-between gap-2">
+      <span data-i18n="modal_avail" class="text-xs text-bakeryTaupe font-medium">Available daily at Bethel branches</span>
+      <a href="tel:0911641614" class="inline-flex items-center gap-2 bg-bakeryYellowGold hover:bg-bakeryAccent text-bakeryDark hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
+        <i class="fa-solid fa-phone"></i>
+        <span data-i18n="modal_btn_call">Call to Order</span>
+      </a>
+    </div>
+  </div>
+</div>
+  </div>
+
+  <!-- Lightbox Photo Viewer Modal -->
+  <div id="lightbox-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="max-w-4xl w-full text-center space-y-4 relative">
+      <button id="close-lightbox" class="absolute -top-10 right-0 text-white hover:text-bakeryYellow text-2xl">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="max-h-[80vh] overflow-hidden rounded-2xl bg-black flex items-center justify-center">
+        <img id="lightbox-img" src="" alt="" class="max-h-[80vh] w-auto object-contain rounded-2xl" />
+      </div>
+      <p id="lightbox-caption" class="text-white text-sm font-serif font-bold tracking-wide"></p>
+    </div>
+  </div>
+
+  <!-- APPLICATION DATA & JAVASCRIPT LOGIC -->
+  <script>
+    // GLOBAL APP STATE & CURRENT LANGUAGE
+    let currentLang = localStorage.getItem("family_bakery_lang") || "en";
+
+    // 1. DICTIONARY FOR TRI-LINGUAL INTERNATIONALIZATION (EN, AM, OM)
+    const I18N = {
+      en: {
+        nav_home: "Home",
+        nav_highlights: "Highlights",
+        nav_about: "About",
+        nav_menu: "Menu",
+        nav_gallery: "Gallery",
+        nav_reviews: "Reviews",
+        nav_locations: "Locations",
+        lang_label: "Language",
+        call_bethel_main: "Call Bethel Branch: 0911 641 614",
+        call_bethel_square: "Call Bethel Square: 0966 334 337",
+        hero_badge: "Artisanal Neighborhood Bakery • Bethel, Addis Ababa",
+        hero_title_1: "Freshly Baked Everyday.",
+        hero_title_2: "Crafted for Every Moment.",
+        hero_subtitle: "Experience warm artisan breads, buttery pastries, celebration cakes, and traditional treats prepared fresh every single morning in Bethel, Addis Ababa.",
+        btn_explore_menu: "Explore Daily Menu",
+        btn_visit_bakery: "Visit Our Bakery",
+        stat_branches_val: "2 Branches",
+        stat_branches_lbl: "Bethel Area Locations",
+        stat_fresh_val: "Daily Fresh",
+        stat_fresh_lbl: "Early Morning Batches",
+        stat_rating_val: "4.6 Score",
+        stat_rating_lbl: "Verified Customer Rating",
+        hero_card_tag: "Warm & Fresh",
+        hero_pill_sub: "Morning Specialty",
+        hero_pill_title: "Artisan Breads & Rolls",
+        hero_hours_title: "Daily Opening Hours",
+        feat_header_tag: "Neighborhood Quality",
+        feat_header_title: "Everything You Need From Your Local Bakery",
+        feat_1_title: "Freshly Baked",
+        feat_1_desc: "Warm artisan breads and rolls prepared every morning for neighborhood families.",
+        feat_2_title: "Cakes & Pastries",
+        feat_2_desc: "Delicious celebration cakes, sweet tea bites, and savory breakfast pastries.",
+        feat_3_title: "Bethel Locations",
+        feat_3_desc: "Conveniently located on Bethel Main Road and near Bethel Square in Addis Ababa.",
+        feat_4_title: "Friendly Service",
+        feat_4_desc: "Serving our community with warm hospitality and reliable phone ordering.",
+        about_tag: "Our Local Promise",
+        about_title: "About Family Bakery",
+        about_desc: "Family Bakery proudly serves the Bethel community in Addis Ababa with daily fresh breads, artisan pastries, cakes, and sweet treats. Whether stopping by for breakfast, picking up warm bread for dinner, or ordering a cake for a celebration, Family Bakery provides authentic taste and friendly service.",
+        about_card_tag: "Neighborhood Commitment",
+        about_card_sub: "Quality Ingredients & Dedicated Craft",
+        about_sub_1_title: "Daily Early Baking",
+        about_sub_1_desc: "Warm loaves and pastries prepared early every single morning.",
+        about_sub_2_title: "Two Bethel Locations",
+        about_sub_2_desc: "Conveniently accessible at Bethel Main Road and Bethel Square.",
+        menu_tag: "Bakery Catalog",
+        menu_title: "Explore Our Daily Offerings",
+        menu_subtitle: "Browse our fresh breads, artisan pastries, cakes, sweets, and beverages.",
+        search_ph: "Search menu items...",
+        cat_all: "All Items",
+        cat_bread: "Bread",
+        cat_pastries: "Pastries",
+        cat_cakes: "Cakes",
+        cat_sweets: "Sweets",
+        cat_drinks: "Drinks",
+        empty_title: "No menu items found",
+        empty_desc: "Try searching for another keyword or selecting a different category tab.",
+        gal_tag: "Visual Tour",
+        gal_title: "Bakery Gallery",
+        gal_subtitle: "Explore our daily baked products, display cases, and bakery atmosphere in Bethel.",
+        gal_all: "All Photos",
+        gal_breads: "Breads",
+        gal_pastries: "Pastries",
+        gal_cakes: "Cakes",
+        gal_storefront: "Storefront & Interior",
+        rev_tag: "Customer Feedback",
+        rev_title: "Verified Branch Ratings",
+        rev_subtitle: "Publicly verified customer feedback scores for our two Bethel bakery branches.",
+        verified_score_badge: "Verified Score",
+        rev_count_1: "Based on 20 verified customer reviews",
+        rev_count_2: "Based on 4 verified customer reviews",
+        chart_title: "Rating Score Breakdown",
+        chart_subtitle: "Average score and verified review count comparison",
+        chart_badge: "Chart Visualizer",
+        loc_tag: "Visit & Call Us",
+        loc_title: "Bakery Locations in Bethel",
+        loc_subtitle: "Visit our bakery locations or call our phone lines directly for immediate orders and inquiries.",
+        lbl_address: "Address",
+        lbl_phone: "Direct Phone Line",
+        lbl_hours: "Operating Hours",
+        bethel_main_addr: "Bethel, Main Road, Addis Ababa",
+        bethel_main_hours: "Every day: 6:00 AM – 9:00 PM",
+        bethel_square_addr: "Around Bethel Square, Addis Ababa",
+        bethel_square_hours: "Every day: 6:00 AM – 10:00 PM",
+        btn_call_main: "Call Bethel Branch",
+        btn_call_square: "Call Bethel Square",
+        btn_directions: "Get Directions",
+        callout_title: "Need to Place an Order or Have Questions?",
+        callout_subtitle: "Call our team directly to check today's fresh bread batches, order custom celebration cakes, or inquire about bulk bakery items for events.",
+        footer_about: "Serving fresh breads, artisan pastries, custom celebration cakes, and sweet treats daily in Bethel, Addis Ababa.",
+        footer_nav_head: "Navigation",
+        footer_phone_head: "Direct Phone Lines",
+        footer_hours_head: "Operating Schedule",
+        footer_open_note: "Open 7 days a week including public holidays.",
+        modal_avail: "Available daily at Bethel branches",
+        modal_btn_call: "Call to Order",
+        view_details: "View Details",
+        status_open: "OPEN NOW",
+        status_closed: "CLOSED NOW"
+      },
+      am: {
+        nav_home: "ዋና ገጽ",
+        nav_highlights: "ዋና ዋና ባህሪያት",
+        nav_about: "ስለ እኛ",
+        nav_menu: "ሜኑ",
+        nav_gallery: "ጋለሪ",
+        nav_reviews: "አስተያየቶች",
+        nav_locations: "አድራሻዎቻችን",
+        lang_label: "ቋንቋ",
+        call_bethel_main: "ለቤተል ቅርንጫፍ ይደውሉ: 0911 641 614",
+        call_bethel_square: "ለቤተል ስኩዌር ይደውሉ: 0966 334 337",
+        hero_badge: "የአካባቢዎ ጥራት ያለው ዳቦ ቤት • ቤተል፣ አዲስ አበባ",
+        hero_title_1: "በየቀኑ አዲስ ተጋግሮ የሚቀርብ።",
+        hero_title_2: "ለማንኛውም ጊዜ የተዘጋጀ።",
+        hero_subtitle: "በየቀኑ ማለዳ በቤተል፣ አዲስ አበባ ትኩስ ዳቦዎችን፣ ለስላሳ ፓስትሪዎችን፣ የልደትና የሰርግ ኬኮችን እና የሀገር ባህል ጣፋጮችን ያግኙ።",
+        btn_explore_menu: "የዕለቱን ሜኑ ይመልከቱ",
+        btn_visit_bakery: "ዳቦ ቤታችንን ይጎብኙ",
+        stat_branches_val: "2 ቅርንጫፎች",
+        stat_branches_lbl: "በቤተል አካባቢ የሚገኙ",
+        stat_fresh_val: "በየቀኑ አዲስ",
+        stat_fresh_lbl: "የማለዳ ትኩስ ምርቶች",
+        stat_rating_val: "4.6 ደረጃ",
+        stat_rating_lbl: "የተረጋገጠ የደንበኛ እርካታ",
+        hero_card_tag: "ትኩስ እና ጣፋጭ",
+        hero_pill_sub: "የማለዳ ልዩ ምርት",
+        hero_pill_title: "ትኩስ ዳቦዎች እና ቦምቦሊኖ",
+        hero_hours_title: "የሥራ ሰዓት",
+        feat_header_tag: "የአካባቢዎ ምርጥ ዳቦ ቤት",
+        feat_header_title: "ከዳቦ ቤታችን የሚፈልጉት ነገር ሁሉ በአንድ ቦታ",
+        feat_1_title: "በየቀኑ አዲስ የሚጋገር",
+        feat_1_desc: "ለቤተሰብዎ የሚሆን ትኩስ ዳቦ በየቀኑ ማለዳ ተጋግሮ ይዘጋጃል።",
+        feat_2_title: "ኬኮች እና ፓስትሪዎች",
+        feat_2_desc: "ለልዩ በዓላት የሚሆኑ ኬኮች፣ ለሻይ ሰዓት የሚሆኑ ጣፋጮች እና ቁርስ።",
+        feat_3_title: "የቤተል ቦታዎች",
+        feat_3_desc: "በቤተል ዋና መንገድ እና በቤተል ስኩዌር አካባቢ በምቾት ያገኙናል።",
+        feat_4_title: "መልካም አስተናጋጅነት",
+        feat_4_desc: "ደንበኞቻችንን በፍቅር እና በታማኝነት እናገለግላለን።",
+        about_tag: "የእኛ ቃልኪዳን",
+        about_title: "ስለ ፋሚሊ ዳቦ ቤት",
+        about_desc: "ፋሚሊ ዳቦ ቤት በቤተል አዲስ አበባ የሚገኘውን ማህበረሰብ በየቀኑ ትኩስ ዳቦዎችን፣ ፓስትሪዎችን፣ ኬኮችን እና ጣፋጮችን በፍቅር ያገለግላል። ለቁርስ፣ ለእራት ወይም ለልዩ በዓላት የሚሆኑ አማራጮችን ከተሟላ አክብሮት ጋር እናቀርባለን።",
+        about_card_tag: "ጥራት እና ቁርጠኝነት",
+        about_card_sub: "በምርጥ ጥሬ እቃዎች የተዘጋጀ",
+        about_sub_1_title: "የማለዳ ትኩስ ጋเกራ",
+        about_sub_1_desc: "በየቀኑ ማለዳ በጠዋት የሚዘጋጁ ትኩስ ዳቦዎች።",
+        about_sub_2_title: "ሁለት የቤተል ቅርንጫፎች",
+        about_sub_2_desc: "በቤተል ዋና መንገድ እና በቤተል ስኩዌር ያገኙናል።",
+        menu_tag: "የዳቦ ቤቱ ዝርዝር",
+        menu_title: "የዕለት ምርቶቻችንን ይመልከቱ",
+        menu_subtitle: "ትኩስ ዳቦዎች፣ ፓስትሪዎች፣ ኬኮች፣ ጣፋጮች እና መጠጦችን ይጎብኙ።",
+        search_ph: "ሜኑ ይፈልጉ...",
+        cat_all: "ሁሉም",
+        cat_bread: "ዳቦ",
+        cat_pastries: "ፓስትሪ",
+        cat_cakes: "ኬክ",
+        cat_sweets: "ጣፋጮች",
+        cat_drinks: "መጠጦች",
+        empty_title: "ምንም የተገኘ ነገር የለም",
+        empty_desc: "እባክዎን ሌላ ቃል በመጠቀም ይፈልጉ ወይም ሌላ ምድብ ይምረጡ።",
+        gal_tag: "የፎቶ ጋለሪ",
+        gal_title: "የዳቦ ቤታችን ገጽታ",
+        gal_subtitle: "በቤተል የሚገኘውን የዳቦ ቤታችንን ትኩስ ምርቶች እና የውስጥ ገጽታ ይመልከቱ።",
+        gal_all: "ሁሉም ፎቶዎች",
+        gal_breads: "ዳቦዎች",
+        gal_pastries: "ፓስትሪዎች",
+        gal_cakes: "ኬኮች",
+        gal_storefront: "ዳቦ ቤቱ እና የውስጥ ገጽታ",
+        rev_tag: "የደንበኞች አስተያየት",
+        rev_title: "የተረጋገጡ የደረጃ መስፈርቶች",
+        rev_subtitle: "በደንበኞቻችን የተሰጡ አስተያየቶች እና የተረጋገጡ ደረጃዎች።",
+        verified_score_badge: "የተረጋገጠ ደረጃ",
+        rev_count_1: "በ20 አስተያየቶች የተረጋገጠ",
+        rev_count_2: "በ4 አስተያየቶች የተረጋገጠ",
+        chart_title: "የደረጃዎች ዝርዝር",
+        chart_subtitle: "የሁለቱ ቅርንጫፎች አማካኝ ደረጃ እና የአስተያየት ብዛት",
+        chart_badge: "ቻርት",
+        loc_tag: "ይጎብኙን / ይደውሉልን",
+        loc_title: "በቤተል የሚገኙ ቅርንጫፎቻችን",
+        loc_subtitle: "በአካል መጥተው ይጎብኙን ወይም ቀጥታ በስልክ ደውለው ይዘዙ።",
+        lbl_address: "አድራሻ",
+        lbl_phone: "ቀጥታ ስልክ",
+        lbl_hours: "የሥራ ሰዓት",
+        bethel_main_addr: "ቤተል፣ ዋና መንገድ፣ አዲስ አበባ",
+        bethel_main_hours: "በየቀኑ፡ ከጠዋቱ 12:00 እስከ ማታ 3:00",
+        bethel_square_addr: "በቤተል ስኩዌር አካባቢ፣ አዲስ አበባ",
+        bethel_square_hours: "በየቀኑ፡ ከጠዋቱ 12:00 እስከ ማታ 4:00",
+        btn_call_main: "ለቤተል ቅርንጫፍ ይደውሉ",
+        btn_call_square: "ለቤተል ስኩዌር ይደውሉ",
+        btn_directions: "አቅጣጫ ያግኙ",
+        callout_title: "ትእዛዝ ማዘዝ ወይም መጠየቅ ይፈልጋሉ?",
+        callout_subtitle: "ቀጥታ ለቡድናችን በመደወል የዛሬን ትኩስ ዳቦ መጠየቅ ወይም የልደት ኬክ ማዘዝ ይችላሉ።",
+        footer_about: "በቤተል አዲስ አበባ በየቀኑ ትኩስ ዳቦ፣ ፓስትሪ፣ የልደት ኬክ እና ጣፋጮችን እናቀርባለን።",
+        footer_nav_head: "ማውጫ",
+        footer_phone_head: "የስልክ መስመሮች",
+        footer_hours_head: "የሥራ ሰዓት",
+        footer_open_note: "በዓላትን ጨምሮ በሳምንት 7 ቀን ክፍት ነው።",
+        modal_avail: "በቤተል ቅርንጫፎቻችን በየቀኑ ይገኛል",
+        modal_btn_call: "ለማዘዝ ይደውሉ",
+        view_details: "ዝርዝር ይመልከቱ",
+        status_open: "አሁን ክፍት ነው",
+        status_closed: "አሁን ዝግ ነው"
+      },
+      om: {
+        nav_home: "Mana",
+        nav_highlights: "Qabxiilee",
+        nav_about: "Waayee Keenya",
+        nav_menu: "Tarree Meenuu",
+        nav_gallery: "Gaalerii",
+        nav_reviews: "Yaada Uummataa",
+        nav_locations: "Teessoo",
+        lang_label: "Afaan",
+        call_bethel_main: "Damee Beetelitti Bilbilaa: 0911 641 614",
+        call_bethel_square: "Damee Beetel Iskuweeriitti Bilbilaa: 0966 334 337",
+        hero_badge: "Daaboo Aadaa Naannoo • Beetel, Finfinnee",
+        hero_title_1: "Guyyaa Guyyaan Haaraa Kan Waaddamu.",
+        hero_title_2: "Yeroo Hundumaaf Kan Qophaa'e.",
+        hero_subtitle: "Beetel, Finfinneetti ganama kallafttiin daaboo ho'aa, paastrii, keekii ayyaanaafi nyaata aadaa haaraa qophaa'u dhandhamaa.",
+        btn_explore_menu: "Meenuu Guyyaa Ilaalaa",
+        btn_visit_bakery: "Daaboo Betee Keenya Daawwadhaa",
+        stat_branches_val: "Dameewwan 2",
+        stat_branches_lbl: "Naannoo Beetel Keessatti",
+        stat_fresh_val: "Guyyaan Haaraa",
+        stat_fresh_lbl: "Ganama Ganama Kan Waaddamu",
+        stat_rating_val: "Sadarkaa 4.6",
+        stat_rating_lbl: "Mirkaneessa Maamiltootaa",
+        hero_card_tag: "Ho'aa & Haaraa",
+        hero_pill_sub: "Adda Ganamaa",
+        hero_pill_title: "Daaboo Ho'aa & Roolii",
+        hero_hours_title: "Sa'aatii Hojii Guyyaa",
+        feat_header_tag: "Qulqullina Naannoo",
+        feat_header_title: "Waantota Daaboo Betee Keessan Cufa Bakka Tokkotti",
+        feat_1_title: "Haaraa Kan Waaddamu",
+        feat_1_desc: "Daaboo ho'aa ganama ganama maatii naannootiif qophaa'u.",
+        feat_2_title: "Keekiifi Paastrii",
+        feat_2_desc: "Keekii ayyaanaa, mi'aawwan shaayii fi paastrii ganamaa dhandhama gaarii.",
+        feat_3_title: "Bakka Beetel",
+        feat_3_desc: "Daandii guddaa Beetelii fi Iskuweerii Beetel cinatti argama.",
+        feat_4_title: "Tajaajila Gaarii",
+        feat_4_desc: "Kabaja fi amanamummaadhaan hawaasa keenya tajaajiluu.",
+        about_tag: "Waadaa Keenya",
+        about_title: "Waayee Family Bakery",
+        about_desc: "Family Bakeryn hawaasa Beetel Finfinnee keessatti argamuuf guyyaa guyyaan daaboo haaraa, paastrii, keekiifi mi'aawwan dhandhama gaarii qaban tajaajila. Cireef, dhiheef ykn ayyaaneffannaaf Family Bakeryn qulqullinaan isin tajaajila.",
+        about_card_tag: "Kutannoo Naannoo",
+        about_card_sub: "Ishaaraa Qulqullinaa Fi Ogummaa",
+        about_sub_1_title: "Bariidhaan Waaddachuu",
+        about_sub_1_desc: "Daaboo ho'aa ganama bariidhaan qophaa'u.",
+        about_sub_2_title: "Bakka Beetel Lama",
+        about_sub_2_desc: "Daandii guddaa Beetelii fi Beetel Iskuweeritti ni argama.",
+        menu_tag: "Tarree Daaboo Betee",
+        menu_title: "Oomishaalee Keenya Guyyaa Ilaalaa",
+        menu_subtitle: "Daaboo haaraa, paastrii, keekii, mi'aawwanii fi dhugaatiiwwan keenya daawwadhaa.",
+        search_ph: "Meenuu barbaadaa...",
+        cat_all: "Hunda",
+        cat_bread: "Daaboo",
+        cat_pastries: "Paastrii",
+        cat_cakes: "Keekii",
+        cat_sweets: "Mi'aawwan",
+        cat_drinks: "Dhugaatii",
+        empty_title: "Homtuu Hawaantame Wanti Hin Argamne",
+        empty_desc: "Mee jecha biraatiin barbaadaa yookiin ramaddii biraa filadhaa.",
+        gal_tag: "Gaalerii Suuraa",
+        gal_title: "Haala Daaboo Betee Keenyaa",
+        gal_subtitle: "Oomishaalee daaboo haaraa fi haala daaboo betee keenyaa Beetel keessatti argamu ilaalaa.",
+        gal_all: "Suuraa Hunda",
+        gal_breads: "Daaboolee",
+        gal_pastries: "Paastriilee",
+        gal_cakes: "Keekiiwwan",
+        gal_storefront: "Mana & Keessa Suqii",
+        rev_tag: "Yaada Maamilaa",
+        rev_title: "Sadarkaa Dameewwan Mirkanaa'an",
+        rev_subtitle: "Sadarkaa fi yaada maamilaa galmeeffame Dameewwan Beetel lamaan keessatti.",
+        verified_score_badge: "Sadarkaa Mirkanaaye",
+        rev_count_1: "Yaada maamilaa 20 irratti hundaa'e",
+        rev_count_2: "Yaada maamilaa 4 irratti hundaa'e",
+        chart_title: "Caccabsaa Sadarkaa",
+        chart_subtitle: "Sadarkaa giddu galeessaa fi baay'ina yaada maamilaa",
+        chart_badge: "Madaallii Chaartii",
+        loc_tag: "Nu Daawwadhaa / Nuuf Bilbilaa",
+        loc_title: "Teessoo Daaboo Betee Beetel Keessatti",
+        loc_subtitle: "Qaamaan dhuftanii nu daawwadhaa yookiin kallaattiin bilbilaan ajaja kennadhaa.",
+        lbl_address: "Teessoo",
+        lbl_phone: "Bilbila Kallaattii",
+        lbl_hours: "Sa'aatii Hojii",
+        bethel_main_addr: "Beetel, Daandii Guddaa, Finfinnee",
+        bethel_main_hours: "Guyyaa hunda: Ganama 12:00 – Galgala 3:00",
+        bethel_square_addr: "Naannoo Beetel Iskuweer, Finfinnee",
+        bethel_square_hours: "Guyyaa hunda: Ganama 12:00 – Galgala 4:00",
+        btn_call_main: "Damee Beetelitti Bilbilaa",
+        btn_call_square: "Damee Beetel Iskuweeriitti Bilbilaa",
+        btn_directions: "Kallattii Argadhaa",
+        callout_title: "Ajaja Kennuu Ykn Gaaffii Qabduu?",
+        callout_subtitle: "Daaboo haaraa guyyaa har'aa, keekii ayyaanaaf ajajachuuf ykn waan biraaf kallaattiin garee keenyaaf bilbilaa.",
+        footer_about: "Daaboo haaraa, paastrii, keekii ayyaanaafi mi'aawwan guyyaa guyyaan Beetel Finfinneetti ni dhiheessina.",
+        footer_nav_head: "Kallattii",
+        footer_phone_head: "Lakk. Bilbilaa",
+        footer_hours_head: "Sa'aatii Hojii",
+        footer_open_note: "Ayyaana dabalatee Torbanitti guyyaa 7 banaadha.",
+        modal_avail: "Dameewwan Beetel keessatti guyyaa guyyaan ni argama",
+        modal_btn_call: "Ajajuuf Bilbilaa",
+        view_details: "Oduu Tarree Ilaalaa",
+        status_open: "AMMA BANAADHA",
+        status_closed: "AMMA CUFAADHA"
+      }
+    };
+
+    // 2. DATA STORE FOR MENU AND GALLERY ITEMS (WITH MULTI-LANGUAGE DESCRIPTIONS)
+    const BAKERY_DATA = {
+      menuItems: [
+        {
+          id: "m1",
+          category: "bread",
+          price: "ETB --.--",
+          image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80",
+          names: {
+            en: "Fresh Sliced Sandwich Bread",
+            am: "ትኩስ የተቆረጠ የሳንድዊች ዳቦ",
+            om: "Daaboo Saandowichii Qolame Haaraa"
+          },
+          descriptions: {
+            en: "Soft, daily-baked white and whole grain loaves prepared fresh every morning in Bethel.",
+            am: "በየቀኑ ማለዳ በቤተል የሚጋገር ለስላሳ እና ጣፋጭ ነጭ እና የሙሉ ስንዴ ዳቦ።",
+            om: "Daaboo qulqulluu fi ho'aa ganama ganama Beetel keessatti waaddamu."
+          }
+        },
+        {
+          id: "m2",
+          category: "bread",
+          price: "ETB --.--",
+          image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?auto=format&fit=crop&w=600&q=80",
+          names: {
+            en: "Artisan Crusty Rolls & Bombolino",
+            am: "የተቆረጠ ቦምቦሊኖ እና የጠዋት ዳቦ",
+            om: "Roolii Ho'aa & Boombolinoo Ganamaa"
+          },
+          descriptions: {
+            en: "Crispy outer crust with fluffy center, ideal for morning tea and breakfast sandwich meals.",
+            am: "ለቁርስ እና ለጠዋት ሻይ የሚሆን ለስላሳ የውስጥ ክፍል ያለው ትኩስ ቦምቦሊኖ።",
+            om: "Ciree ganamaafi shaayiidhaaf kan ta'u daaboo ho'aa fi mi'aawaa."
+          }
+        },
+        {
+          id: "m3",
+          category: "pastries",
+          price: "ETB --.--",
+          image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80",
+          names: {
+            en: "Flaky Butter Croissant",
+            am: "በቅቤ የተሰራ ክሩሳንት (Croissant)",
+            om: "Kroosaantii Dhadhaadhaan Qophaa'e"
+          },
+          descriptions: {
+            en: "Golden-baked layered butter pastry with delicate crust, prepared according to classic technique.",
+            am: "በምርጥ ቅቤ በጥንቃቄ የተጋገረ ለስላሳ እና ጣፋጭ የፈረንሳይ ፓስትሪ።",
+            om: "Paastrii leeyarii dhadhaatiin mi'aawaa ta'ee bifa ወርቃማ waaddame."
+          }
+        },
+        {
+          id: "m4",
+          category: "pastries",
+          price: "ETB --.--",
+          image: "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&w=600&q=80",
+          names: {
+            en: "Chocolate Custard Pastry",
+            am: "የቾኮሌት እና ክሬም ፓስትሪ",
+            om: "Paastrii Chokolaatii Fi Kiriimii"
+          },
+          descriptions: {
+            en: "Rich chocolate cream filling enveloped inside crisp layered baked dough.",
+            am: "በውስጡ ጣፋጭ የቾኮሌት ክሬም የያዘ ምርጥ የሻይ ሰዓት ፓስትሪ።",
+            om: "Keessaan kiriimii chokolaatii qabu paastrii mi'aawaa ganamaa."
+          }
+        },
+        {
+          id: "m5",
+          category: "cakes",
+          price: "ETB --.--",
+          image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=600&q=80",
+          names: {
+            en: "Layered Celebration Cake",
+            am: "የልደት እና በዓላት ኬክ",
+            om: "Keekii Ayyaanaaf Qophaa'e"
+          },
+          descriptions: {
+            en: "Custom decorative layered cake designed for birthdays, anniversaries, and special events.",
+            am: "ለልደት፣ ለሰርግ እና ለልዩ በዓላት በትእዛዝ የሚዘጋጅ ያማረ ዲዛይን ያለው ኬክ።",
+            om: "Ayyaana dhalootaa fi cidhaaf kan qophaa'u keekii bareeda."
+          }
+        },
+        {
+          id: "m6",
+          category: "cakes",
+          price: "ETB --.--",
+          image: "https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&w=600&q=80",
+          names: {
+            en: "Fresh Strawberry Cream Sponge",
+            am: "የስትሮበሪ እና ቫኒላ ስፖንጅ ኬክ",
+            om: "Keekii Istroobarii Fi Vaniilaa"
+          },
+          descriptions: {
+            en: "Light sponge cake filled with delicate vanilla cream and fresh berry toppings.",
+            am: "ለስላሳ የስፖንጅ ኬክ ከቫኒላ ክሬም እና ከትኩስ ፍራፍሬዎች ጋር።",
+            om: "Keekii ispoonjii laafaa kiriimii vaniilaa fi firii haaraa qabu."
+          }
+        },
+        {
+          id: "m7",
+          category: "sweets",
+          price: "ETB --.--",
+          image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=600&q=80",
+          names: {
+            en: "Assorted Sweet Tea Biscuits",
+            am: "የሻይ ሰዓት ቢስኩቶች እና ጣፋጮች",
+            om: "Biskuutii Fi Mi'aawwan Shaayii"
+          },
+          descriptions: {
+            en: "Crisp butter cookies and sweet baked bites, ideal companion for afternoon tea.",
+            am: "ከአስኳል እና ቅቤ የተሰሩ ለከስክስ እና ጣፋጭ የሻይ ማሰሪያ ቢስኩቶች።",
+            om: "Biskuutii dhadhaa mi'aawaa shaayii galgalaatiif kan ta'u."
+          }
+        },
+        {
+          id: "m8",
+          category: "drinks",
+          price: "ETB --.--",
+          image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80",
+          names: {
+            en: "Ethiopian Fresh Coffee & Tea",
+            am: "ትኩስ የሀበሻ ቡና እና ወተት ሻይ",
+            om: "Bunnaa Aadaa Fi Shaayii"
+          },
+          descriptions: {
+            en: "Freshly brewed local Ethiopian roasted coffee and aromatic hot spiced tea beverages.",
+            am: "በየቀኑ የሚቆላ ትኩስ የሀገር ውስጥ ቡና እና የተቀመመ የቅመም ሻይ።",
+            om: "Bunna waaddamaa haaraa fi shaayii mi'aawaa spices qabu."
+          }
+        }
+      ],
+      galleryItems: [
+        { id: "g1", category: "breads", image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80", captions: { en: "Fresh Daily Breads Batch", am: "የትኩስ ዳቦዎች ስብስብ", om: "Daaboo Haaraa Guyyaa" } },
+        { id: "g2", category: "pastries", image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80", captions: { en: "Golden Butter Pastries", am: "የተጠበሱ ፓስትሪዎች", om: "Paastrii Dhadhaa Bareeda" } },
+        { id: "g3", category: "cakes", image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=800&q=80", captions: { en: "Custom Celebration Layered Cake", am: "የልደት እና የበዓል ኬክ", om: "Keekii Ayyaanaa Bareeda" } },
+        { id: "g4", category: "storefront", image: "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80", captions: { en: "Family Bakery Counter & Display", am: "የዳቦ ቤቱ አስተናጋጅ እና ማሳያ", om: "Mana Daaboo Fi Kaounterii" } },
+        { id: "g5", category: "storefront", image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80", captions: { en: "Storefront Exterior in Bethel", am: "በቤተል የሚገኘው ዳቦ ቤት ገጽታ", om: "Suqii Daaboo Beetel Keessatti" } },
+        { id: "g6", category: "breads", image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?auto=format&fit=crop&w=800&q=80", captions: { en: "Fresh Artisan Morning Breads", am: "የጠዋት ትኩስ ዳቦዎች", om: "Daaboo Ganamaa Ho'aa" } },
+        { id: "g7", category: "pastries", image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80", captions: { en: "Hot Fresh Coffee & Bakery Snacks", am: "ትኩስ ቡና እና የዳቦ ቁርስ", om: "Bunna Ho'aa Fi Nyaata Ganamaa" } },
+        { id: "g8", category: "cakes", image: "https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&w=800&q=80", captions: { en: "Special Occasion Decorative Cakes", am: "የልዩ በዓላት ኬኮች", om: "Keekii Ayyaana Addaa" } }
+      ]
+    };
+
+    // 3. INITIALIZATION ON DOM CONTENT LOADED
+    document.addEventListener("DOMContentLoaded", () => {
+      document.documentElement.style.scrollBehavior = "smooth";
+      initMobileMenu();
+      initHeaderScroll();
+      initLanguageSwitcher();
+      applyLanguage(currentLang);
+      initMenuTabs();
+      initMenuSearch();
+      initGalleryTabs();
+      initBranchOperatingStatus();
+      initChartJSVisualization();
+    });
+
+    // 4. LANGUAGE SWITCHER LOGIC
+    function initLanguageSwitcher() {
+      const langBtns = document.querySelectorAll(".lang-btn");
+      langBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const selectedLang = btn.getAttribute("data-lang");
+          if (selectedLang && I18N[selectedLang]) {
+            currentLang = selectedLang;
+            localStorage.setItem("family_bakery_lang", currentLang);
+            applyLanguage(currentLang);
+          }
+        });
+      });
+    }
+
+    function applyLanguage(lang) {
+      // Update Active Button Styling in Header & Mobile Drawer
+      const langBtns = document.querySelectorAll(".lang-btn");
+      langBtns.forEach(btn => {
+        const btnLang = btn.getAttribute("data-lang");
+        if (btnLang === lang) {
+          btn.className = "lang-btn px-2.5 py-1 rounded-lg transition-all bg-bakeryDark text-white shadow-sm font-bold";
+        } else {
+          btn.className = "lang-btn px-2.5 py-1 rounded-lg transition-all text-bakeryDark hover:bg-bakeryAmber font-semibold";
+        }
+      });
+
+      // Translate all DOM elements tagged with data-i18n
+      const translatableElements = document.querySelectorAll("[data-i18n]");
+      translatableElements.forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (I18N[lang] && I18N[lang][key]) {
+          el.innerText = I18N[lang][key];
+        }
+      });
+
+      // Update Placeholders
+      const searchInput = document.getElementById("menu-search");
+      if (searchInput && I18N[lang] && I18N[lang]["search_ph"]) {
+        searchInput.placeholder = I18N[lang]["search_ph"];
+      }
+
+      // Re-render Dynamic Menu & Gallery Content with Translated Text
+      const activeMenuTab = document.querySelector(".menu-tab-btn.bg-bakeryDark");
+      const activeCategory = activeMenuTab ? activeMenuTab.getAttribute("data-category") : "all";
+      renderMenu(activeCategory, searchInput ? searchInput.value : "");
+
+      const activeGalleryTab = document.querySelector(".gallery-filter-btn.bg-bakeryDark");
+      const activeGalleryFilter = activeGalleryTab ? activeGalleryTab.getAttribute("data-gallery-filter") : "all";
+      renderGallery(activeGalleryFilter);
+
+      // Re-calculate Branch Operating Status for Translated Badges
+      initBranchOperatingStatus();
+    }
+
+    // 5. MOBILE NAVIGATION DRAWER TOGGLE
+    function initMobileMenu() {
+      const btn = document.getElementById("mobile-menu-btn");
+      const menu = document.getElementById("mobile-menu");
+      const iconOpen = document.getElementById("menu-icon-open");
+      const iconClose = document.getElementById("menu-icon-close");
+      const links = document.querySelectorAll(".mobile-link");
+
+      btn.addEventListener("click", () => {
+        const isHidden = menu.classList.contains("hidden");
+        if (isHidden) {
+          menu.classList.remove("hidden");
+          iconOpen.classList.add("hidden");
+          iconClose.classList.remove("hidden");
+        } else {
+          menu.classList.add("hidden");
+          iconOpen.classList.remove("hidden");
+          iconClose.classList.add("hidden");
+        }
+      });
+
+      links.forEach(link => {
+        link.addEventListener("click", () => {
+          menu.classList.add("hidden");
+          iconOpen.classList.remove("hidden");
+          iconClose.classList.add("hidden");
+        });
+      });
+    }
+
+    // 6. HEADER STICKY BACKGROUND SCROLL EFFECT
+    function initHeaderScroll() {
+      const header = document.getElementById("main-header");
+      window.addEventListener("scroll", () => {
+        if (window.scrollY > 20) {
+          header.classList.add("shadow-md");
+        } else {
+          header.classList.remove("shadow-md");
+        }
+      });
+    }
+
+    // 7. DYNAMIC MENU RENDERING LOGIC WITH MULTI-LANGUAGE LOOKUP
+    function renderMenu(categoryFilter = "all", searchQuery = "") {
+      const grid = document.getElementById("menu-grid");
+      const emptyState = document.getElementById("menu-empty");
+      grid.innerHTML = "";
+
+      const filtered = BAKERY_DATA.menuItems.filter(item => {
+        const itemName = item.names[currentLang] || item.names['en'];
+        const itemDesc = item.descriptions[currentLang] || item.descriptions['en'];
+
+        const matchesCategory = (categoryFilter === "all") || (item.category === categoryFilter);
+        const matchesSearch = itemName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              itemDesc.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove("hidden");
+        return;
+      } else {
+        emptyState.classList.add("hidden");
+      }
+
+      const viewDetailsText = I18N[currentLang]["view_details"] || "View Details";
+
+      filtered.forEach(item => {
+        const itemName = item.names[currentLang] || item.names['en'];
+        const itemDesc = item.descriptions[currentLang] || item.descriptions['en'];
+        
+        const card = document.createElement("div");
+        card.className = "bg-white rounded-2xl border border-bakeryBorder overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group cursor-pointer";
+        card.onclick = () => openItemModal(item);
+
+        card.innerHTML = `
+          <div>
+            <div class="aspect-[4/3] bg-bakerySurface relative overflow-hidden">
+              <img src="${item.image}" alt="${itemName}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <span class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-bakeryDark text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                ${item.category}
+              </span>
+            </div>
+            <div class="p-5">
+              <h3 class="text-xl font-serif font-bold text-bakeryDark group-hover:text-bakeryAccent transition-colors">${itemName}</h3>
+              <p class="text-xs text-bakeryTaupe mt-2 leading-relaxed line-clamp-2">${itemDesc}</p>
+            </div>
+          </div>
+          <div class="px-5 pb-5 pt-2 border-t border-bakeryBorder/60 flex items-center justify-between">
+            <span class="text-xs font-bold text-bakeryDark bg-bakeryBg px-2.5 py-1 rounded-md border border-bakeryBorder">${item.price}</span>
+            <span class="text-xs font-bold text-bakeryDark flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+              <span>${viewDetailsText}</span>
+              <i class="fa-solid fa-angle-right text-[10px] text-bakeryAccent"></i>
+            </span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // 8. MENU CATEGORY TAB CONTROLS
+    function initMenuTabs() {
+      const tabs = document.querySelectorAll(".menu-tab-btn");
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          tabs.forEach(t => {
+            t.classList.remove("bg-bakeryDark", "text-white");
+            t.classList.add("bg-bakeryBg", "text-bakeryDark");
+          });
+          tab.classList.remove("bg-bakeryBg", "text-bakeryDark");
+          tab.classList.add("bg-bakeryDark", "text-white");
+
+          const category = tab.getAttribute("data-category");
+          const searchInput = document.getElementById("menu-search");
+          renderMenu(category, searchInput.value);
+        });
+      });
+    }
+
+    // 9. MENU LIVE SEARCH
+    function initMenuSearch() {
+      const searchInput = document.getElementById("menu-search");
+      searchInput.addEventListener("input", (e) => {
+        const activeTab = document.querySelector(".menu-tab-btn.bg-bakeryDark");
+        const activeCategory = activeTab ? activeTab.getAttribute("data-category") : "all";
+        renderMenu(activeCategory, e.target.value);
+      });
+    }
+
+    // 10. ITEM DETAIL MODAL LOGIC
+    function openItemModal(item) {
+      const itemName = item.names[currentLang] || item.names['en'];
+      const itemDesc = item.descriptions[currentLang] || item.descriptions['en'];
+
+      document.getElementById("modal-item-title").innerText = itemName;
+      document.getElementById("modal-item-category").innerText = item.category;
+      document.getElementById("modal-item-price").innerText = item.price;
+      document.getElementById("modal-item-desc").innerText = itemDesc;
+      document.getElementById("modal-item-image").src = item.image;
+      document.getElementById("modal-item-image").alt = itemName;
+      
+      document.getElementById("item-modal").classList.remove("hidden");
+    }
+
+    function closeItemModal() {
+      document.getElementById("item-modal").classList.add("hidden");
+    }
+
+    document.getElementById("close-item-modal").addEventListener("click", closeItemModal);
+
+    // 11. DYNAMIC GALLERY RENDERING & FILTERING
+    function renderGallery(filter = "all") {
+      const grid = document.getElementById("gallery-grid");
+      grid.innerHTML = "";
+
+      const filtered = BAKERY_DATA.galleryItems.filter(item => {
+        return filter === "all" || item.category === filter;
+      });
+
+      filtered.forEach(item => {
+        const caption = item.captions[currentLang] || item.captions['en'];
+        const div = document.createElement("div");
+        div.className = "relative aspect-square rounded-2xl overflow-hidden bg-bakerySurface border border-bakeryBorder group cursor-pointer shadow-sm";
+        div.onclick = () => openLightbox(item.image, caption);
+
+        div.innerHTML = `
+          <img src="${item.image}" alt="${caption}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+            <span class="text-xs font-serif font-bold text-white">${caption}</span>
+          </div>
+        `;
+        grid.appendChild(div);
+      });
+    }
+
+    function initGalleryTabs() {
+      const buttons = document.querySelectorAll(".gallery-filter-btn");
+      buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          buttons.forEach(b => {
+            b.classList.remove("bg-bakeryDark", "text-white");
+            b.classList.add("bg-white", "text-bakeryDark");
+          });
+          btn.classList.remove("bg-white", "text-bakeryDark");
+          btn.classList.add("bg-bakeryDark", "text-white");
+
+          const filter = btn.getAttribute("data-gallery-filter");
+          renderGallery(filter);
+        });
+      });
+    }
+
+    // 12. LIGHTBOX PHOTO VIEWER
+    function openLightbox(imgSrc, captionText) {
+      document.getElementById("lightbox-img").src = imgSrc;
+      document.getElementById("lightbox-caption").innerText = captionText;
+      document.getElementById("lightbox-modal").classList.remove("hidden");
+    }
+
+    document.getElementById("close-lightbox").addEventListener("click", () => {
+      document.getElementById("lightbox-modal").classList.add("hidden");
+    });
+
+    // 13. CALCULATE LIVE OPERATING STATUS FOR BRANCHES (Clean Badges with Translation)
+    function initBranchOperatingStatus() {
+      const now = new Date();
+      const currentHour = now.getHours();
+
+      const openText = I18N[currentLang]["status_open"] || "OPEN NOW";
+      const closedText = I18N[currentLang]["status_closed"] || "CLOSED NOW";
+
+      // Bethel Main Hours: 6:00 AM (6) to 9:00 PM (21)
+      const bethelMainOpen = currentHour >= 6 && currentHour < 21;
+      const statusMain = document.getElementById("status-bethel-main");
+      if (bethelMainOpen) {
+        statusMain.className = "px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-bold text-xs";
+        statusMain.innerText = openText;
+      } else {
+        statusMain.className = "px-3.5 py-1 rounded-full bg-amber-100 text-amber-900 font-bold text-xs";
+        statusMain.innerText = closedText;
+      }
+
+      // Bethel Square Hours: 6:00 AM (6) to 10:00 PM (22)
+      const bethelSquareOpen = currentHour >= 6 && currentHour < 22;
+      const statusSquare = document.getElementById("status-bethel-square");
+      if (bethelSquareOpen) {
+        statusSquare.className = "px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-bold text-xs";
+        statusSquare.innerText = openText;
+      } else {
+        statusSquare.className = "px-3.5 py-1 rounded-full bg-amber-100 text-amber-900 font-bold text-xs";
+        statusSquare.innerText = closedText;
+      }
+    }
+
+    // 14. CHART.JS CANVAS RATINGS VISUALIZATION
+    function initChartJSVisualization() {
+      const ctx = document.getElementById("ratingsChart").getContext("2d");
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Bethel Branch', 'Bethel Square'],
+          datasets: [
+            {
+              label: 'Average Score (out of 5.0)',
+              data: [4.2, 5.0],
+              backgroundColor: '#EAB308',
+              borderRadius: 8,
+              borderSkipped: false
+            },
+            {
+              label: 'Verified Review Count',
+              data: [20, 4],
+              backgroundColor: '#291E13',
+              borderRadius: 8,
+              borderSkipped: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+                color: '#291E13'
+              }
+            },
+            tooltip: {
+              backgroundColor: '#1F150C',
+              titleFont: { family: 'Playfair Display', size: 13, weight: 'bold' },
+              bodyFont: { family: 'Plus Jakarta Sans', size: 11 },
+              padding: 10,
+              cornerRadius: 8
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: '#F3E8C4' },
+              ticks: { color: '#6E5C4F', font: { family: 'Plus Jakarta Sans', size: 11 } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#291E13', font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' } }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>  and Put pictures from google review to make the static web realistic, make it immersive with live bachground aon the entire web that has this pic as a logo , proceed this edit on the web you just designed . I want this to be deployed on vercel to be live
