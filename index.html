@@ -1,4 +1,4 @@
-<!-- Chosen Palette: Warm Cream & Golden Yellow Bakery (Background: #FFFDF5, Surfaces: #FFF9E6/#FEF08A, Text: #291E13/#6E5C4F, Accent: #EAB308/#D97706, Header/Footer: #291E13) -->
+<!-- Chosen Palette: Hanit Bakery Ruby Red & Warm Cream (Background: #FFF7F7, Surfaces: #FFE8E8/#F6B6B9, Text: #3A1216/#79565A, Accent: #B81F2B/#8E1822, Header/Footer: #3A1216) -->
 <!-- Application Structure Plan: Single-page interactive web application updated with full tri-lingual internationalization (English, Amharic/አማርኛ, Afaan Oromoo) allowing instant runtime language switching across all sections, hero copy, menu items, gallery items, and branch details. Maintained direct telephone ordering CTAs, visual gallery with photo lightbox modal (prepped for direct Google Review photos integration), dynamic menu category tabs with live client-side search, Chart.js rating visualizer, and live branch operating hours status logic. -->
 <!-- Visualization & Content Choices: 1. Tri-Lingual State Switcher -> Custom I18N JS dictionary powering real-time DOM translation & dynamic menu re-rendering across EN, AM, and OM languages without page reload. 2. Menu Catalog -> Category filtering + live text search -> Client-side lookup. 3. Ratings Comparison -> Chart.js Canvas bar chart -> Responsive container. 4. Visual Gallery & Google Reviews Photos -> Lightbox modal -> Full resolution photo view. CONFIRMING: NO SVG graphics used. NO Mermaid JS used. -->
 <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
@@ -30,17 +30,17 @@
       theme: {
         extend: {
           colors: {
-            bakeryBg: '#FFFDF5',
-            bakerySurface: '#FFF9E6',
+            bakeryBg: '#FFF7F7',
+            bakerySurface: '#FFE8E8',
             bakeryCard: '#FFFFFF',
-            bakeryDark: '#291E13',
-            bakeryTaupe: '#6E5C4F',
-            bakeryYellow: '#FACC15',
-            bakeryYellowGold: '#EAB308',
-            bakeryAmber: '#FEF08A',
-            bakeryAccent: '#D97706',
-            bakeryBorder: '#F3E8C4',
-            bakeryEspresso: '#1F150C',
+            bakeryDark: '#3A1216',
+            bakeryTaupe: '#79565A',
+            bakeryRedLight: '#D63A45',
+            bakeryRed: '#B81F2B',
+            bakeryRose: '#F6B6B9',
+            bakeryAccent: '#8E1822',
+            bakeryBorder: '#F0C9CC',
+            bakeryEspresso: '#24090C',
           },
           fontFamily: {
             serif: ['"Playfair Display"', 'Georgia', 'serif'],
@@ -74,9 +74,9 @@
     #site-glow {
       z-index: 29;
       background:
-        radial-gradient(circle at 15% 20%, rgba(250,204,21,.18), transparent 25%),
-        radial-gradient(circle at 85% 30%, rgba(217,119,6,.15), transparent 23%),
-        radial-gradient(circle at 50% 90%, rgba(234,179,8,.13), transparent 30%),
+        radial-gradient(circle at 15% 20%, rgba(214,58,69,.18), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(142,24,34,.15), transparent 23%),
+        radial-gradient(circle at 50% 90%, rgba(184,31,43,.13), transparent 30%),
         radial-gradient(circle at 50% 45%, rgba(255,255,255,.35), transparent 48%);
       animation: glowPulse 10s ease-in-out infinite alternate;
       mix-blend-mode: multiply;
@@ -130,10 +130,10 @@
       height: 6px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
-      background: #FFF9E6;
+      background: #FFE8E8;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #EAB308;
+      background: #B81F2B;
       border-radius: 9999px;
     }
   </style>
@@ -1669,14 +1669,14 @@
             {
               label: 'Average Score (out of 5.0)',
               data: [4.2, 5.0],
-              backgroundColor: '#EAB308',
+              backgroundColor: '#B81F2B',
               borderRadius: 8,
               borderSkipped: false
             },
             {
               label: 'Verified Review Count',
               data: [20, 4],
-              backgroundColor: '#291E13',
+              backgroundColor: '#3A1216',
               borderRadius: 8,
               borderSkipped: false
             }
@@ -1690,11 +1690,11 @@
               position: 'top',
               labels: {
                 font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
-                color: '#291E13'
+                color: '#3A1216'
               }
             },
             tooltip: {
-              backgroundColor: '#1F150C',
+              backgroundColor: '#24090C',
               titleFont: { family: 'Playfair Display', size: 13, weight: 'bold' },
               bodyFont: { family: 'Plus Jakarta Sans', size: 11 },
               padding: 10,
@@ -1704,12 +1704,12 @@
           scales: {
             y: {
               beginAtZero: true,
-              grid: { color: '#F3E8C4' },
-              ticks: { color: '#6E5C4F', font: { family: 'Plus Jakarta Sans', size: 11 } }
+              grid: { color: '#F0C9CC' },
+              ticks: { color: '#79565A', font: { family: 'Plus Jakarta Sans', size: 11 } }
             },
             x: {
               grid: { display: false },
-              ticks: { color: '#291E13', font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' } }
+              ticks: { color: '#3A1216', font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' } }
             }
           }
         }
