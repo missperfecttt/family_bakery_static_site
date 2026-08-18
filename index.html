@@ -1,0 +1,900 @@
+<!-- Chosen Palette: Hanit Bakery Ruby Red & Warm Cream (Background: #FFF7F7, Surfaces: #FFE8E8/#F6B6B9, Text: #3A1216/#79565A, Accent: #B81F2B/#8E1822, Header/Footer: #3A1216) -->
+<!-- Application Structure Plan: Single-page interactive web application updated with full tri-lingual internationalization (English, Amharic/አማርኛ, Afaan Oromoo) allowing instant runtime language switching across all sections, hero copy, menu items, gallery items, and branch details. Maintained direct telephone ordering CTAs, visual gallery with photo lightbox modal (prepped for direct Google Review photos integration), dynamic menu category tabs with live client-side search, Chart.js rating visualizer, and live branch operating hours status logic. -->
+<!-- Visualization & Content Choices: 1. Tri-Lingual State Switcher -> Custom I18N JS dictionary powering real-time DOM translation & dynamic menu re-rendering across EN, AM, and OM languages without page reload. 2. Menu Catalog -> Category filtering + live text search -> Client-side lookup. 3. Ratings Comparison -> Chart.js Canvas bar chart -> Responsive container. 4. Visual Gallery & Google Reviews Photos -> Lightbox modal -> Full resolution photo view. CONFIRMING: NO SVG graphics used. NO Mermaid JS used. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<!-- Brand asset: assets/family-bakery-logo.jpg supplied by the site owner. -->
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hanit Bakery | ሃኒት ዳቦና ኬክ - Addis Ababa, Ethiopia</title>
+  <link rel="icon" type="image/jpeg" href="assets/family-bakery-logo.jpg" />
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN for Canvas Visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Font Awesome Web Font Icons (CSS Glyph Rendering) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Google Fonts: Playfair Display (Serif) & Plus Jakarta Sans (Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500..900;1,500..900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind Custom Theme Configuration -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bakeryBg: '#FFF7F7',
+            bakerySurface: '#FFE8E8',
+            bakeryCard: '#FFFFFF',
+            bakeryDark: '#3A1216',
+            bakeryTaupe: '#79565A',
+            bakeryRedLight: '#D63A45',
+            bakeryRed: '#B81F2B',
+            bakeryRose: '#F6B6B9',
+            bakeryAccent: '#8E1822',
+            bakeryBorder: '#F0C9CC',
+            bakeryEspresso: '#24090C',
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Full-page immersive logo atmosphere */
+    #site-atmosphere, #site-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+      overflow: hidden;
+    }
+    #site-atmosphere {
+      background-image: url("assets/family-bakery-logo.jpg");
+      background-size: 330px auto;
+      background-repeat: repeat;
+      background-position: center;
+      opacity: 0.075;
+      filter: saturate(1.08) contrast(1.08);
+      transform: rotate(-2deg) scale(1.10);
+      animation: logoDrift 28s linear infinite;
+      mix-blend-mode: multiply;
+    }
+    #site-glow {
+      z-index: 29;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(214,58,69,.18), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(142,24,34,.15), transparent 23%),
+        radial-gradient(circle at 50% 90%, rgba(184,31,43,.13), transparent 30%),
+        radial-gradient(circle at 50% 45%, rgba(255,255,255,.35), transparent 48%);
+      animation: glowPulse 10s ease-in-out infinite alternate;
+      mix-blend-mode: multiply;
+    }
+    @keyframes logoDrift {
+      0% { background-position: 0 0; }
+      50% { background-position: 130px 70px; }
+      100% { background-position: 260px 140px; }
+    }
+    @keyframes glowPulse {
+      0% { opacity: .55; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.07); }
+    }
+    .brand-logo {
+      display: block;
+      width: 154px;
+      height: 62px;
+      object-fit: contain;
+      object-position: center;
+      border-radius: 12px;
+      filter: drop-shadow(0 3px 8px rgba(41,30,19,.10));
+    }
+    .footer-brand-logo {
+      width: 150px;
+      height: 62px;
+      border-radius: 12px;
+    }
+    @media (max-width: 640px) {
+      .brand-logo { width: 128px; height: 54px; }
+      .footer-brand-logo { width: 140px; height: 58px; }
+      #site-atmosphere { background-size: 210px auto; opacity: .028; }
+    }
+
+    /* Minimal Custom Utility Classes for Layout Constraints & Modal Interactions */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 280px;
+      max-height: 380px;
+    }
+    @media (min-width: 768px) {
+      .chart-container {
+        height: 320px;
+      }
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #FFE8E8;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #B81F2B;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-bakeryBg text-bakeryDark font-sans antialiased selection:bg-bakeryRose selection:text-bakeryDark">
+  <div id="site-glow" aria-hidden="true"></div>
+  <div id="site-atmosphere" aria-hidden="true"></div>
+
+  <!-- GLOBAL NAVIGATION HEADER -->
+  <header id="main-header" class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-bakeryBorder transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        
+    <!-- Brand Identity -->
+    <a href="#hero" class="flex items-center gap-3 group" aria-label="Hanit Bakery home">
+      <img src="assets/family-bakery-logo.jpg" alt="ሃኒት Hanit Bakery logo" class="brand-logo" />
+    </a>
+
+    <!-- Desktop Navigation Links -->
+    <nav class="hidden md:flex items-center gap-1 lg:gap-2">
+      <a href="#hero" data-i18n="nav_home" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryRose/50 rounded-lg transition-colors">Home</a>
+      <a href="#features" data-i18n="nav_highlights" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryRose/50 rounded-lg transition-colors">Highlights</a>
+      <a href="#about" data-i18n="nav_about" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryRose/50 rounded-lg transition-colors">About</a>
+      <a href="#menu" data-i18n="nav_menu" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryRose/50 rounded-lg transition-colors">Menu</a>
+      <a href="#gallery" data-i18n="nav_gallery" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryRose/50 rounded-lg transition-colors">Gallery</a>
+      <a href="#reviews" data-i18n="nav_reviews" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryRose/50 rounded-lg transition-colors">Reviews</a>
+      <a href="#locations" data-i18n="nav_locations" class="px-3 py-2 text-sm font-medium text-bakeryTaupe hover:text-bakeryDark hover:bg-bakeryRose/50 rounded-lg transition-colors">Locations</a>
+    </nav>
+
+    <!-- Right Header Options: Language Switcher & Call CTA -->
+    <div class="hidden sm:flex items-center gap-3">
+      
+      <!-- Tri-Lingual Language Switcher Pill (Desktop) -->
+      <div class="flex items-center bg-bakerySurface border border-bakeryBorder rounded-xl p-1 text-xs font-bold shadow-inner">
+        <button data-lang="en" class="lang-btn px-2.5 py-1 rounded-lg transition-all bg-bakeryDark text-white shadow-sm">EN</button>
+        <button data-lang="am" class="lang-btn px-2.5 py-1 rounded-lg transition-all text-bakeryDark hover:bg-bakeryRose">አማ</button>
+        <button data-lang="om" class="lang-btn px-2.5 py-1 rounded-lg transition-all text-bakeryDark hover:bg-bakeryRose">OM</button>
+      </div>
+
+      <a href="tel:+251961287507" class="inline-flex items-center gap-2 bg-bakeryRed hover:bg-bakeryAccent text-bakeryDark hover:text-white px-4 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-all transform hover:-translate-y-0.5">
+        <i class="fa-solid fa-phone text-xs"></i>
+        <span>+251 96 128 7507</span>
+      </a>
+    </div>
+
+    <!-- Mobile Menu Hamburger Button -->
+    <button id="mobile-menu-btn" type="button" class="md:hidden p-2 rounded-lg text-bakeryDark hover:bg-bakerySurface focus:outline-none" aria-label="Toggle Navigation Menu">
+      <i id="menu-icon-open" class="fa-solid fa-bars text-xl"></i>
+      <i id="menu-icon-close" class="fa-solid fa-xmark text-xl hidden"></i>
+    </button>
+
+  </div>
+</div>
+
+<!-- Mobile Drawer Navigation -->
+<div id="mobile-menu" class="hidden md:hidden bg-white border-b border-bakeryBorder px-4 pt-2 pb-6 space-y-3">
+  
+  <!-- Mobile Language Switcher Toolbar -->
+  <div class="flex items-center justify-between pb-2 border-b border-bakeryBorder">
+    <span class="text-xs font-bold text-bakeryTaupe uppercase tracking-wider" data-i18n="lang_label">Language / ቋንቋ / Afaan</span>
+    <div class="flex items-center bg-bakerySurface border border-bakeryBorder rounded-xl p-1 text-xs font-bold">
+      <button data-lang="en" class="lang-btn px-3 py-1 rounded-lg transition-all bg-bakeryDark text-white">EN</button>
+      <button data-lang="am" class="lang-btn px-3 py-1 rounded-lg transition-all text-bakeryDark hover:bg-bakeryRose">አማ</button>
+      <button data-lang="om" class="lang-btn px-3 py-1 rounded-lg transition-all text-bakeryDark hover:bg-bakeryRose">OM</button>
+    </div>
+  </div>
+
+  <a href="#hero" data-i18n="nav_home" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Home</a>
+  <a href="#features" data-i18n="nav_highlights" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Highlights</a>
+  <a href="#about" data-i18n="nav_about" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">About</a>
+  <a href="#menu" data-i18n="nav_menu" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Menu</a>
+  <a href="#gallery" data-i18n="nav_gallery" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Gallery</a>
+  <a href="#reviews" data-i18n="nav_reviews" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Reviews</a>
+  <a href="#locations" data-i18n="nav_locations" class="mobile-link block px-4 py-2 rounded-lg text-base font-medium text-bakeryDark hover:bg-bakerySurface">Locations</a>
+  
+  <div class="pt-3 border-t border-bakeryBorder flex flex-col gap-2">
+    <a href="tel:+251961287507" class="flex items-center justify-center gap-2 bg-bakeryRed text-bakeryDark py-3 rounded-xl font-bold text-sm">
+      <i class="fa-solid fa-phone"></i>
+      <span data-i18n="call_bethel_main">Call KK-07-2288 Street: +251 96 128 7507</span>
+    </a>
+    <a href="tel:+25191428913" class="flex items-center justify-center gap-2 bg-bakerySurface text-bakeryDark py-3 rounded-xl font-bold text-sm">
+      <i class="fa-solid fa-phone"></i>
+      <span data-i18n="call_bethel_square">Call Mekanisa (Lesotho Street): +251 91 142 8913</span>
+    </a>
+  </div>
+</div>
+  </header>
+
+  <!-- MAIN APPLICATION CONTENT CONTAINER -->
+  <main class="pt-20">
+
+<!-- SECTION 1: HERO SECTION -->
+<section id="hero" class="relative py-14 lg:py-24 overflow-hidden bg-gradient-to-b from-bakerySurface via-bakerySurface/60 to-bakeryBg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <!-- Hero Copy Column -->
+      <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+        
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-bakeryRose/80 border border-bakeryRed/40 text-bakeryDark text-xs font-semibold uppercase tracking-wider">
+          <i class="fa-solid fa-location-dot text-bakeryAccent"></i>
+          <span data-i18n="hero_badge">Artisanal Neighborhood Bakery • Addis Ababa, Ethiopia</span>
+        </div>
+
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-bakeryDark tracking-tight leading-[1.15]">
+          <span data-i18n="hero_title_1">Freshly Baked Everyday.</span> <br class="hidden sm:inline" />
+          <span data-i18n="hero_title_2" class="italic font-normal text-bakeryAccent">Crafted for Every Moment.</span>
+        </h1>
+
+        <p data-i18n="hero_subtitle" class="text-base sm:text-lg text-bakeryTaupe max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+          Experience warm artisan breads, buttery pastries, celebration cakes, and traditional treats prepared fresh every single morning in Addis Ababa, Ethiopia.
+        </p>
+
+        <!-- CTA Actions -->
+        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+          <a href="#menu" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-bakeryRed hover:bg-bakeryAccent text-bakeryDark hover:text-white px-8 py-3.5 rounded-xl font-bold text-base shadow-md transition-all transform hover:-translate-y-0.5">
+            <span data-i18n="btn_explore_menu">Explore Daily Menu</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </a>
+          <a href="#locations" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder px-8 py-3.5 rounded-xl font-bold text-base transition-all">
+            <i class="fa-solid fa-store text-bakeryRed"></i>
+            <span data-i18n="btn_visit_bakery">Visit Our Bakery</span>
+          </a>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="pt-6 border-t border-bakeryBorder/80 grid grid-cols-3 gap-4 text-center lg:text-left max-w-lg mx-auto lg:mx-0">
+          <div>
+            <span data-i18n="stat_branches_val" class="block text-2xl font-serif font-bold text-bakeryDark">2 Branches</span>
+            <span data-i18n="stat_branches_lbl" class="text-xs text-bakeryTaupe font-medium">Addis Ababa Locations</span>
+          </div>
+          <div>
+            <span data-i18n="stat_fresh_val" class="block text-2xl font-serif font-bold text-bakeryDark">Daily Fresh</span>
+            <span data-i18n="stat_fresh_lbl" class="text-xs text-bakeryTaupe font-medium">Early Morning Batches</span>
+          </div>
+          <div>
+            <span data-i18n="stat_rating_val" class="block text-2xl font-serif font-bold text-bakeryDark">4.6 Score</span>
+            <span data-i18n="stat_rating_lbl" class="text-xs text-bakeryTaupe font-medium">Verified Customer Rating</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Hero Graphic Column -->
+      <div class="lg:col-span-5 relative">
+        <div class="relative mx-auto max-w-md lg:max-w-none">
+          
+          <!-- Card Framing Overlay -->
+          <div class="bg-white rounded-3xl p-5 shadow-xl border border-bakeryBorder space-y-4">
+            <div class="relative aspect-[4/3] rounded-2xl overflow-hidden bg-bakerySurface">
+              <img id="hero-main-image" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80" alt="Fresh Bakery Breads Display" class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500" />
+              <div class="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3.5 py-1 rounded-full text-xs font-bold text-bakeryDark shadow-sm font-serif">
+                <span data-i18n="hero_card_tag">Warm & Fresh</span>
+              </div>
+            </div>
+
+            <!-- Featured Highlight Pill inside Card -->
+            <div class="flex items-center justify-between p-3.5 bg-bakerySurface rounded-xl border border-bakeryBorder">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-bakeryRedLight/30 text-bakeryAccent flex items-center justify-center font-bold">
+                  <i class="fa-solid fa-bread-slice"></i>
+                </div>
+                <div>
+                  <h3 data-i18n="hero_pill_sub" class="text-xs font-bold text-bakeryDark uppercase tracking-wider">Morning Specialty</h3>
+                  <p data-i18n="hero_pill_title" class="text-sm font-serif font-bold text-bakeryDark">Artisan Breads & Rolls</p>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-bakeryDark bg-bakeryRose px-3 py-1 rounded-lg border border-bakeryRed/40">Addis Ababa</span>
+            </div>
+          </div>
+
+          <!-- Floating Accent Badge -->
+          <div class="absolute -bottom-5 -left-5 bg-bakeryEspresso text-white p-4.5 rounded-2xl shadow-2xl border border-white/10 hidden sm:flex items-center gap-3 max-w-xs">
+            <div class="w-10 h-10 rounded-xl bg-bakeryRed flex items-center justify-center text-bakeryDark font-bold shrink-0">
+              <i class="fa-solid fa-clock text-lg"></i>
+            </div>
+            <div>
+              <p data-i18n="hero_hours_title" class="text-xs text-white/70 font-medium">Daily Opening Hours</p>
+              <p class="text-xs font-bold text-bakeryRose">6:00 AM – 10:00 PM</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: QUICK BUSINESS INFORMATION -->
+<section id="features" class="py-16 bg-white border-y border-bakeryBorder">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <h2 data-i18n="feat_header_tag" class="text-xs font-extrabold uppercase tracking-widest text-bakeryAccent mb-2">Neighborhood Quality</h2>
+      <p data-i18n="feat_header_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark">Everything You Need From Your Local Bakery</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      
+      <!-- Card 1 -->
+      <div class="bg-bakeryBg rounded-2xl p-6 border border-bakeryBorder hover:border-bakeryRed transition-all duration-300 hover:shadow-md group">
+        <div class="w-12 h-12 rounded-xl bg-bakeryRose text-bakeryDark flex items-center justify-center text-xl font-bold mb-5 group-hover:bg-bakeryRed transition-colors">
+          <i class="fa-solid fa-wheat-awn"></i>
+        </div>
+        <h3 data-i18n="feat_1_title" class="text-xl font-serif font-bold text-bakeryDark mb-2">Freshly Baked</h3>
+        <p data-i18n="feat_1_desc" class="text-sm text-bakeryTaupe leading-relaxed">
+          Warm artisan breads and rolls prepared every morning for neighborhood families.
+        </p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="bg-bakeryBg rounded-2xl p-6 border border-bakeryBorder hover:border-bakeryRed transition-all duration-300 hover:shadow-md group">
+        <div class="w-12 h-12 rounded-xl bg-bakeryRose text-bakeryDark flex items-center justify-center text-xl font-bold mb-5 group-hover:bg-bakeryRed transition-colors">
+          <i class="fa-solid fa-cake-candles"></i>
+        </div>
+        <h3 data-i18n="feat_2_title" class="text-xl font-serif font-bold text-bakeryDark mb-2">Cakes & Pastries</h3>
+        <p data-i18n="feat_2_desc" class="text-sm text-bakeryTaupe leading-relaxed">
+          Delicious celebration cakes, sweet tea bites, and savory breakfast pastries.
+        </p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="bg-bakeryBg rounded-2xl p-6 border border-bakeryBorder hover:border-bakeryRed transition-all duration-300 hover:shadow-md group">
+        <div class="w-12 h-12 rounded-xl bg-bakeryRose text-bakeryDark flex items-center justify-center text-xl font-bold mb-5 group-hover:bg-bakeryRed transition-colors">
+          <i class="fa-solid fa-map-pin"></i>
+        </div>
+        <h3 data-i18n="feat_3_title" class="text-xl font-serif font-bold text-bakeryDark mb-2">Hanit Bakery Locations</h3>
+        <p data-i18n="feat_3_desc" class="text-sm text-bakeryTaupe leading-relaxed">
+          Conveniently located on KK-07-2288 Street, Kolfe Keranio and near Mekanisa (Lesotho Street) in Addis Ababa.
+        </p>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="bg-bakeryBg rounded-2xl p-6 border border-bakeryBorder hover:border-bakeryRed transition-all duration-300 hover:shadow-md group">
+        <div class="w-12 h-12 rounded-xl bg-bakeryRose text-bakeryDark flex items-center justify-center text-xl font-bold mb-5 group-hover:bg-bakeryRed transition-colors">
+          <i class="fa-solid fa-store"></i>
+        </div>
+        <h3 data-i18n="feat_4_title" class="text-xl font-serif font-bold text-bakeryDark mb-2">Friendly Service</h3>
+        <p data-i18n="feat_4_desc" class="text-sm text-bakeryTaupe leading-relaxed">
+          Serving our community with warm hospitality and reliable phone ordering.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: ABOUT SECTION -->
+<section id="about" class="py-16 sm:py-24 bg-bakeryBg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <!-- About Image Frame -->
+      <div class="lg:col-span-5 order-2 lg:order-1">
+        <div class="relative bg-white rounded-3xl p-4 border border-bakeryBorder shadow-lg">
+          <div class="aspect-[4/3] rounded-2xl overflow-hidden bg-bakerySurface">
+            <img id="about-main-image" src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80" alt="Hanit Bakery Selection" class="w-full h-full object-cover" />
+          </div>
+          <div class="mt-4 p-4 bg-bakerySurface rounded-xl border border-bakeryBorder flex items-center justify-between">
+            <div>
+              <span data-i18n="about_card_tag" class="block text-xs font-bold text-bakeryAccent uppercase tracking-wider">Neighborhood Commitment</span>
+              <span data-i18n="about_card_sub" class="text-sm font-serif font-bold text-bakeryDark">Quality Ingredients & Dedicated Craft</span>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-bakeryRed text-bakeryDark flex items-center justify-center text-sm font-bold">
+              <i class="fa-solid fa-check"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- About Narrative -->
+      <div class="lg:col-span-7 order-1 lg:order-2 space-y-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bakeryRose text-bakeryDark text-xs font-semibold uppercase tracking-wider border border-bakeryRed/30">
+          <i class="fa-solid fa-heart text-bakeryAccent"></i>
+          <span data-i18n="about_tag">Our Local Promise</span>
+        </div>
+
+        <h2 data-i18n="about_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark tracking-tight">
+          About Hanit Bakery
+        </h2>
+
+        <p data-i18n="about_desc" class="text-base sm:text-lg text-bakeryTaupe leading-relaxed font-normal">
+          Hanit Bakery proudly serves the Kolfe Keranio community in Addis Ababa with daily fresh breads, artisan pastries, cakes, and sweet treats. Whether stopping by for breakfast, picking up warm bread for dinner, or ordering a cake for a celebration, Hanit Bakery provides authentic taste and friendly service.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div class="p-4 rounded-xl bg-white border border-bakeryBorder">
+            <h3 class="font-serif font-bold text-bakeryDark text-base mb-1 flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-bakeryRed text-xs"></i>
+              <span data-i18n="about_sub_1_title">Daily Early Baking</span>
+            </h3>
+            <p data-i18n="about_sub_1_desc" class="text-xs text-bakeryTaupe">Warm loaves and pastries prepared early every single morning.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-white border border-bakeryBorder">
+            <h3 class="font-serif font-bold text-bakeryDark text-base mb-1 flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-bakeryRed text-xs"></i>
+              <span data-i18n="about_sub_2_title">Five Addis Ababa Locations</span>
+            </h3>
+            <p data-i18n="about_sub_2_desc" class="text-xs text-bakeryTaupe">Conveniently accessible at KK-07-2288 Street, Kolfe Keranio and Mekanisa (Lesotho Street).</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: DYNAMIC MENU SECTION -->
+<section id="menu" class="py-16 sm:py-24 bg-white border-t border-bakeryBorder">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Menu Header & Controls -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+      <div>
+        <span data-i18n="menu_tag" class="text-xs font-extrabold uppercase tracking-widest text-bakeryAccent block mb-2">Bakery Catalog</span>
+        <h2 data-i18n="menu_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark">Explore Our Daily Offerings</h2>
+        <p data-i18n="menu_subtitle" class="text-sm text-bakeryTaupe mt-1">Browse our fresh breads, artisan pastries, cakes, sweets, and beverages.</p>
+      </div>
+
+      <!-- Dynamic Search Input -->
+      <div class="relative w-full md:w-72">
+        <input id="menu-search" type="text" placeholder="Search menu items..." class="w-full bg-bakeryBg border border-bakeryBorder rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-bakeryRed focus:ring-1 focus:ring-bakeryRed text-bakeryDark placeholder-bakeryTaupe/60" />
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-xs text-bakeryTaupe"></i>
+      </div>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-8 custom-scrollbar">
+      <button data-category="all" class="menu-tab-btn active bg-bakeryDark text-white px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all shadow-sm">
+        <span data-i18n="cat_all">All Items</span>
+      </button>
+      <button data-category="bread" class="menu-tab-btn bg-bakeryBg hover:bg-bakerySurface text-bakeryDark px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border border-bakeryBorder">
+        <span data-i18n="cat_bread">Bread</span>
+      </button>
+      <button data-category="pastries" class="menu-tab-btn bg-bakeryBg hover:bg-bakerySurface text-bakeryDark px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border border-bakeryBorder">
+        <span data-i18n="cat_pastries">Pastries</span>
+      </button>
+      <button data-category="cakes" class="menu-tab-btn bg-bakeryBg hover:bg-bakerySurface text-bakeryDark px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border border-bakeryBorder">
+        <span data-i18n="cat_cakes">Cakes</span>
+      </button>
+      <button data-category="sweets" class="menu-tab-btn bg-bakeryBg hover:bg-bakerySurface text-bakeryDark px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border border-bakeryBorder">
+        <span data-i18n="cat_sweets">Sweets</span>
+      </button>
+      <button data-category="drinks" class="menu-tab-btn bg-bakeryBg hover:bg-bakerySurface text-bakeryDark px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all border border-bakeryBorder">
+        <span data-i18n="cat_drinks">Drinks</span>
+      </button>
+    </div>
+
+    <!-- Menu Product Grid -->
+    <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <!-- Populated dynamically via Vanilla JS with full language support -->
+    </div>
+
+    <!-- Empty State Container -->
+    <div id="menu-empty" class="hidden text-center py-16 bg-bakeryBg rounded-2xl border border-dashed border-bakeryBorder">
+      <div class="w-12 h-12 rounded-full bg-bakeryRose text-bakeryDark flex items-center justify-center mx-auto mb-3 text-lg">
+        <i class="fa-solid fa-utensils"></i>
+      </div>
+      <h3 data-i18n="empty_title" class="text-lg font-serif font-bold text-bakeryDark">No menu items found</h3>
+      <p data-i18n="empty_desc" class="text-xs text-bakeryTaupe mt-1">Try searching for another keyword or selecting a different category tab.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 5: GALLERY & GOOGLE REVIEWS PHOTOS SECTION -->
+<section id="gallery" class="py-16 sm:py-24 bg-bakeryBg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <span data-i18n="gal_tag" class="text-xs font-extrabold uppercase tracking-widest text-bakeryAccent block mb-2">Visual Tour</span>
+      <h2 data-i18n="gal_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark">Bakery Gallery</h2>
+      <p data-i18n="gal_subtitle" class="text-sm text-bakeryTaupe mt-2">Explore our daily baked products, display cases, and bakery atmosphere in Addis Ababa.</p>
+    </div>
+
+    <!-- Gallery Filter Pills -->
+    <div class="flex items-center justify-center gap-2 flex-wrap mb-8">
+      <button data-gallery-filter="all" class="gallery-filter-btn active bg-bakeryDark text-white px-4 py-2 rounded-lg text-xs font-bold transition-all">
+        <span data-i18n="gal_all">All Photos</span>
+      </button>
+      <button data-gallery-filter="breads" class="gallery-filter-btn bg-white hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder px-4 py-2 rounded-lg text-xs font-bold transition-all">
+        <span data-i18n="gal_breads">Breads</span>
+      </button>
+      <button data-gallery-filter="pastries" class="gallery-filter-btn bg-white hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder px-4 py-2 rounded-lg text-xs font-bold transition-all">
+        <span data-i18n="gal_pastries">Pastries</span>
+      </button>
+      <button data-gallery-filter="cakes" class="gallery-filter-btn bg-white hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder px-4 py-2 rounded-lg text-xs font-bold transition-all">
+        <span data-i18n="gal_cakes">Cakes</span>
+      </button>
+      <button data-gallery-filter="storefront" class="gallery-filter-btn bg-white hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder px-4 py-2 rounded-lg text-xs font-bold transition-all">
+        <span data-i18n="gal_storefront">Storefront & Interior</span>
+      </button>
+    </div>
+
+    <div class="max-w-3xl mx-auto mb-8 rounded-2xl border border-bakeryBorder bg-white/85 backdrop-blur-sm px-5 py-4 text-center shadow-sm">
+      <p class="text-xs sm:text-sm text-bakeryTaupe leading-relaxed">
+        <strong class="text-bakeryDark">Photo note:</strong> the gallery uses bakery photography for a realistic visual experience.
+        Use the button below to view the business listing and customer-uploaded photos on Google Maps.
+      </p>
+      <a href="https://www.google.com/maps/search/?api=1&query=Family+Bakery+KK-07-2288+Street+Kolfe+Keranio+Addis+Ababa+Ethiopia" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 mt-3 bg-bakeryDark text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-bakeryAccent transition-colors">
+        <i class="fa-brands fa-google"></i> View Google photos & reviews
+      </a>
+    </div>
+
+    <!-- Gallery Grid -->
+    <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <!-- Gallery Items populated via JavaScript -->
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 6: VERIFIED REVIEWS & RATINGS -->
+<section id="reviews" class="py-16 sm:py-24 bg-white border-t border-bakeryBorder">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span data-i18n="rev_tag" class="text-xs font-extrabold uppercase tracking-widest text-bakeryAccent block mb-2">Customer Feedback</span>
+      <h2 data-i18n="rev_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark">Verified Branch Ratings</h2>
+      <p data-i18n="rev_subtitle" class="text-sm text-bakeryTaupe mt-2">Publicly verified customer feedback scores for our our Addis Ababa bakery locations.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      
+      <!-- Branch Rating Scorecards Column -->
+      <div class="lg:col-span-6 space-y-6">
+        
+        <!-- Branch 1 Scorecard -->
+        <div class="bg-bakeryBg p-6 rounded-2xl border border-bakeryBorder hover:border-bakeryRed transition-all">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h3 class="text-2xl font-serif font-bold text-bakeryDark">Hanit Bakery & Cake</h3>
+              <p class="text-xs text-bakeryTaupe mt-0.5">KK-07-2288 Street, Kolfe Keranio Sub-City, Addis Ababa, Ethiopia</p>
+            </div>
+            <span data-i18n="verified_score_badge" class="bg-bakeryRose text-bakeryDark text-xs font-bold px-3 py-1 rounded-full border border-bakeryRed/30">Verified Score</span>
+          </div>
+
+          <div class="flex items-baseline gap-3 mb-3">
+            <span class="text-4xl font-serif font-bold text-bakeryDark">4.2</span>
+            <span class="text-sm font-semibold text-bakeryTaupe">/ 5.0</span>
+            <div class="flex items-center text-amber-500 text-sm gap-1 ml-2">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star-half-stroke"></i>
+            </div>
+          </div>
+
+          <div class="w-full bg-bakeryBorder/50 rounded-full h-2.5 mb-2 overflow-hidden">
+            <div class="bg-bakeryRed h-2.5 rounded-full" style="width: 84%"></div>
+          </div>
+
+          <p data-i18n="rev_count_1" class="text-xs text-bakeryTaupe font-medium">Based on 20 verified customer reviews</p>
+        </div>
+
+        <!-- Branch 2 Scorecard -->
+        <div class="bg-bakeryBg p-6 rounded-2xl border border-bakeryBorder hover:border-bakeryRed transition-all">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h3 class="text-2xl font-serif font-bold text-bakeryDark">Hanit Bakery — Mekanisa</h3>
+              <p class="text-xs text-bakeryTaupe mt-0.5">Lesotho Street (XPMM+4F8), Mekanisa, Addis Ababa</p>
+            </div>
+            <span data-i18n="verified_score_badge" class="bg-bakeryRose text-bakeryDark text-xs font-bold px-3 py-1 rounded-full border border-bakeryRed/30">Verified Score</span>
+          </div>
+
+          <div class="flex items-baseline gap-3 mb-3">
+            <span class="text-4xl font-serif font-bold text-bakeryDark">5.0</span>
+            <span class="text-sm font-semibold text-bakeryTaupe">/ 5.0</span>
+            <div class="flex items-center text-amber-500 text-sm gap-1 ml-2">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+          </div>
+
+          <div class="w-full bg-bakeryBorder/50 rounded-full h-2.5 mb-2 overflow-hidden">
+            <div class="bg-bakeryRed h-2.5 rounded-full" style="width: 100%"></div>
+          </div>
+
+          <p data-i18n="rev_count_2" class="text-xs text-bakeryTaupe font-medium">Based on 4 verified customer reviews</p>
+        </div>
+
+      </div>
+
+      <!-- Chart Visualizer Column -->
+      <div class="lg:col-span-6 bg-bakeryBg p-6 rounded-2xl border border-bakeryBorder">
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <h3 data-i18n="chart_title" class="text-lg font-serif font-bold text-bakeryDark">Rating Score Breakdown</h3>
+            <p data-i18n="chart_subtitle" class="text-xs text-bakeryTaupe">Average score and verified review count comparison</p>
+          </div>
+          <span data-i18n="chart_badge" class="text-xs font-bold text-bakeryDark bg-white px-3 py-1 rounded-lg border border-bakeryBorder">Chart Visualizer</span>
+        </div>
+
+        <!-- Canvas Chart Container with mandatory Tailwind constraint wrappers -->
+        <div class="chart-container">
+          <canvas id="ratingsChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 7: BRANCH LOCATIONS & DIRECT CONTACT HUB -->
+<section id="locations" class="py-16 sm:py-24 bg-bakeryBg">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span data-i18n="loc_tag" class="text-xs font-extrabold uppercase tracking-widest text-bakeryAccent block mb-2">Visit & Call Us</span>
+      <h2 data-i18n="loc_title" class="text-3xl sm:text-4xl font-serif font-bold text-bakeryDark">Bakery Locations in Addis Ababa</h2>
+      <p data-i18n="loc_subtitle" class="text-sm text-bakeryTaupe mt-2">Visit our bakery locations or call our phone lines directly for immediate orders and inquiries.</p>
+      <div class="mt-6 rounded-2xl border border-bakeryBorder bg-white/80 p-5 text-sm text-bakeryTaupe shadow-sm">
+        <p class="font-bold text-bakeryDark">Hanit Bakery locations</p>
+        <ul class="mt-2 grid gap-1 sm:grid-cols-2">
+          <li>• KK-07-2288 Street, Kolfe Keranio Sub-City</li>
+          <li>• Lesotho Street (XPMM+4F8), Mekanisa</li>
+          <li>• Unnamed Road, Addis Ababa</li>
+          <li>• Egypt Street (XPMM+3G6), Abo Mazoria</li>
+          <li>• 2M3V+8G8, Addis Ababa</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      
+      <!-- Location Card 1: KK-07-2288 Street -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-bakeryBorder shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-3.5 py-1 rounded-full bg-bakeryRose text-bakeryDark font-bold text-xs uppercase tracking-wider">KK-07-2288 Street</span>
+            <span id="status-bethel-main" class="px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-bold text-xs">
+              Calculating...
+            </span>
+          </div>
+
+          <h3 class="text-2xl font-serif font-bold text-bakeryDark mb-2">Hanit Bakery & Cake — Kolfe Keranio</h3>
+          
+          <div class="space-y-4 my-6 text-sm text-bakeryTaupe">
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-location-dot text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_address" class="font-bold text-bakeryDark block">Address</span>
+                <span data-i18n="bethel_main_addr">KK-07-2288 Street, Kolfe Keranio Sub-City, Addis Ababa, Ethiopia</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-phone text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_phone" class="font-bold text-bakeryDark block">Direct Phone Line</span>
+                <a href="tel:+251961287507" class="text-bakeryDark font-bold hover:text-bakeryAccent text-base">+251 96 128 7507</a>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-clock text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_hours" class="font-bold text-bakeryDark block">Operating Hours</span>
+                <span data-i18n="bethel_main_hours">Every day: 6:00 AM – 9:00 PM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6 border-t border-bakeryBorder flex flex-col sm:flex-row gap-3">
+          <a href="tel:+251961287507" class="w-full sm:w-1/2 flex items-center justify-center gap-2 bg-bakeryRed hover:bg-bakeryAccent text-bakeryDark hover:text-white py-3 px-4 rounded-xl font-bold text-sm transition-all shadow-sm">
+            <i class="fa-solid fa-phone"></i>
+            <span data-i18n="btn_call_main">Call KK-07-2288 Street</span>
+          </a>
+          <a href="https://maps.google.com/?q=KK-07-2288+Street+Kolfe+Keranio+Addis+Ababa+Ethiopia" target="_blank" rel="noopener noreferrer" class="w-full sm:w-1/2 flex items-center justify-center gap-2 bg-bakeryBg hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder py-3 px-4 rounded-xl font-bold text-sm transition-all">
+            <i class="fa-solid fa-diamond-turn-right text-bakeryAccent"></i>
+            <span data-i18n="btn_directions">Get Directions</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Location Card 2: Mekanisa (Lesotho Street) -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-bakeryBorder shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-3.5 py-1 rounded-full bg-bakeryRose text-bakeryDark font-bold text-xs uppercase tracking-wider">Mekanisa (Lesotho Street)</span>
+            <span id="status-bethel-square" class="px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-bold text-xs">
+              Calculating...
+            </span>
+          </div>
+
+          <h3 class="text-2xl font-serif font-bold text-bakeryDark mb-2">Hanit Bakery — Mekanisa (Lesotho Street)</h3>
+          
+          <div class="space-y-4 my-6 text-sm text-bakeryTaupe">
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-location-dot text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_address" class="font-bold text-bakeryDark block">Address</span>
+                <span data-i18n="bethel_square_addr">Around Mekanisa (Lesotho Street), Addis Ababa</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-phone text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_phone" class="font-bold text-bakeryDark block">Direct Phone Line</span>
+                <a href="tel:+25191428913" class="text-bakeryDark font-bold hover:text-bakeryAccent text-base">+251 91 142 8913</a>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-clock text-bakeryAccent mt-1 text-base"></i>
+              <div>
+                <span data-i18n="lbl_hours" class="font-bold text-bakeryDark block">Operating Hours</span>
+                <span data-i18n="bethel_square_hours">Every day: 6:00 AM – 10:00 PM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6 border-t border-bakeryBorder flex flex-col sm:flex-row gap-3">
+          <a href="tel:+25191428913" class="w-full sm:w-1/2 flex items-center justify-center gap-2 bg-bakeryRed hover:bg-bakeryAccent text-bakeryDark hover:text-white py-3 px-4 rounded-xl font-bold text-sm transition-all shadow-sm">
+            <i class="fa-solid fa-phone"></i>
+            <span data-i18n="btn_call_square">Call Mekanisa (Lesotho Street)</span>
+          </a>
+          <a href="https://maps.google.com/?q=Lesotho+Street+Mekanisa+Addis+Ababa+Ethiopia" target="_blank" rel="noopener noreferrer" class="w-full sm:w-1/2 flex items-center justify-center gap-2 bg-bakeryBg hover:bg-bakerySurface text-bakeryDark border border-bakeryBorder py-3 px-4 rounded-xl font-bold text-sm transition-all">
+            <i class="fa-solid fa-diamond-turn-right text-bakeryAccent"></i>
+            <span data-i18n="btn_directions">Get Directions</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Direct Phone Order Callout Box -->
+    <div class="mt-12 bg-white rounded-3xl p-8 border border-bakeryBorder shadow-sm max-w-4xl mx-auto text-center space-y-4">
+      <div class="w-12 h-12 rounded-full bg-bakeryRose text-bakeryDark flex items-center justify-center mx-auto text-xl">
+        <i class="fa-solid fa-headset"></i>
+      </div>
+      <h3 data-i18n="callout_title" class="text-2xl font-serif font-bold text-bakeryDark">Need to Place an Order or Have Questions?</h3>
+      <p data-i18n="callout_subtitle" class="text-sm text-bakeryTaupe max-w-2xl mx-auto leading-relaxed">
+        Call our team directly to check today's fresh bread batches, order custom celebration cakes, or inquire about bulk bakery items for events.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+        <a href="tel:+251961287507" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-bakeryRed hover:bg-bakeryAccent text-bakeryDark hover:text-white px-7 py-3 rounded-xl font-bold text-sm transition-all shadow-sm">
+          <i class="fa-solid fa-phone"></i>
+          <span>KK-07-2288 Street: +251 96 128 7507</span>
+        </a>
+        <a href="tel:+25191428913" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-bakerySurface hover:bg-bakeryRose text-bakeryDark px-7 py-3 rounded-xl font-bold text-sm transition-all border border-bakeryBorder">
+          <i class="fa-solid fa-phone"></i>
+          <span>Mekanisa (Lesotho Street): +251 91 142 8913</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+  </main>
+
+  <!-- GLOBAL FOOTER SECTION -->
+  <footer class="bg-bakeryEspresso text-white pt-16 pb-12 border-t border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 pb-12 border-b border-white/10">
+    
+    <!-- Brand Info -->
+    <div class="lg:col-span-4 space-y-4">
+      <div class="flex items-center gap-3">
+        <img src="assets/family-bakery-logo.jpg" alt="ሃኒት Hanit Bakery logo" class="footer-brand-logo" />
+      </div>
+      <p data-i18n="footer_about" class="text-xs text-white/70 leading-relaxed max-w-sm">
+        Serving fresh breads, artisan pastries, custom celebration cakes, and sweet treats daily in Addis Ababa, Ethiopia.
+      </p>
+      <div class="text-xs text-white/50 pt-2">
+        Addis Ababa, Ethiopia
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="lg:col-span-2 space-y-3">
+      <h4 data-i18n="footer_nav_head" class="text-xs font-bold uppercase tracking-wider text-bakeryRedLight">Navigation</h4>
+      <ul class="space-y-2 text-xs text-white/80">
+        <li><a href="#hero" data-i18n="nav_home" class="hover:text-bakeryRedLight transition-colors">Home</a></li>
+        <li><a href="#about" data-i18n="nav_about" class="hover:text-bakeryRedLight transition-colors">About Us</a></li>
+        <li><a href="#menu" data-i18n="nav_menu" class="hover:text-bakeryRedLight transition-colors">Bakery Menu</a></li>
+        <li><a href="#gallery" data-i18n="nav_gallery" class="hover:text-bakeryRedLight transition-colors">Visual Gallery</a></li>
+        <li><a href="#reviews" data-i18n="nav_reviews" class="hover:text-bakeryRedLight transition-colors">Verified Ratings</a></li>
+        <li><a href="#locations" data-i18n="nav_locations" class="hover:text-bakeryRedLight transition-colors">Locations & Contact</a></li>
+      </ul>
+    </div>
+
+    <!-- Branch Contacts -->
+    <div class="lg:col-span-3 space-y-3">
+      <h4 data-i18n="footer_phone_head" class="text-xs font-bold uppercase tracking-wider text-bakeryRedLight">Direct Phone Lines</h4>
+      <div class="space-y-2 text-xs text-white/80">
+        <p>
+          <strong class="text-white block">KK-07-2288 Street:</strong>
+          <a href="tel:+251961287507" class="hover:text-bakeryRedLight font-bold">+251 96 128 7507</a>
+        </p>
+        <p>
+          <strong class="text-white block">Mekanisa (Lesotho Street):</strong>
+          <a href="tel:+25191428913" class="hover:text-bakeryRedLight font-bold">+251 91 142 8913</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Operating Hours Summary -->
+    <div class="lg:col-span-3 space-y-3">
+      <h4 data-i18n="footer_hours_head" class="text-xs font-bold uppercase tracking-wider text-bakeryRedLight">Operating Schedule</h4>
+      <div class="space-y-2 text-xs text-white/80">
+        <p><strong class="text-white">KK-07-2288 Street:</strong> 6:00 AM – 9:00 PM Daily</p>
+        <p><strong class="text-white">Mekanisa (Lesotho Street):</strong> 6:00 AM – 10:00 PM Daily</p>
+        <p data-i18n="footer_open_note" class="text-white/50 text-[11px] pt-1">Open 7 days a week including public holidays.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer Bottom -->
+  <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-white/50 gap-4">
+    <p>&copy; 2026 Hanit Bakery (ሃኒት ዳቦና ኬክ). All rights reserved.</p>
+    <p>Addis Ababa, Ethiopia</p>
+  </div>
+
+</div>
+  </footer>
+
+  <!-- INTERACTIVE MODAL DIALOGS -->
+
+  <!-- Item Detail Modal -->
+  <div id="item-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden border border-bakeryBorder shadow-2xl relative">
+      <button id="close-item-modal" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 text-bakeryDark hover:bg-white flex items-center justify-center shadow-md z-10">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      
+  <div id="modal-item-image-container" class="aspect-[16/9] w-full bg-bakerySurface relative overflow-hidden">
+    <img id="modal-item-image" src="" alt="" class="w-full h-full object-cover" />
+  </div>
+
+  <div class="p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <span id="modal-item-category" class="px-3 py-1 rounded-full bg-bakeryRose text-bakeryDark font-bold text-xs uppercase tracking-wider">Category</span>
+      <span id="modal-item-price" class="text-sm font-bold text-bakeryDark bg-bakerySurface px-3 py-1 rounded-lg">ETB --.--</span>
+    </div>
+
+    <h3 id="modal-item-title" class="text-2xl font-serif font-bold text-bakeryDark">Item Title</h3>
+    <p id="modal-item-desc" class="text-sm text-bakeryTaupe leading-relaxed">Detailed item description.</p>
+
+    <div class="pt-4 border-t border-bakeryBorder flex items-center justify-between gap-2">
+      <span data-i18n="modal_avail" class="text-xs text-bakeryTaupe font-medium">Available daily at Hanit Bakery branches</span>
+      <a href="tel:+251961287507" class="inline-flex items-center gap-2 bg-bakeryRed hover:bg-bakeryAccent text-bakeryDark hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">
+        <i class="fa-solid fa-phone"></i>
+        <span data-i18n="modal_btn_call">Call to Order</span>
+      </a>
+    </div>
+  </div>
+</div>
+  </div>
+
+  <!-- Lightbox Photo Viewer Modal -->
+ <div id="lightbox-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
