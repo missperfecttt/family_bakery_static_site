@@ -2,7 +2,7 @@
 <!-- Application Structure Plan: Single-page interactive web application updated with full tri-lingual internationalization (English, Amharic/አማርኛ, Afaan Oromoo) allowing instant runtime language switching across all sections, hero copy, menu items, gallery items, and branch details. Maintained direct telephone ordering CTAs, visual gallery with photo lightbox modal (prepped for direct Google Review photos integration), dynamic menu category tabs with live client-side search, Chart.js rating visualizer, and live branch operating hours status logic. -->
 <!-- Visualization & Content Choices: 1. Tri-Lingual State Switcher -> Custom I18N JS dictionary powering real-time DOM translation & dynamic menu re-rendering across EN, AM, and OM languages without page reload. 2. Menu Catalog -> Category filtering + live text search -> Client-side lookup. 3. Ratings Comparison -> Chart.js Canvas bar chart -> Responsive container. 4. Visual Gallery & Google Reviews Photos -> Lightbox modal -> Full resolution photo view. CONFIRMING: NO SVG graphics used. NO Mermaid JS used. -->
 <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-<!-- Brand asset: family-bakery-logo.png supplied by the site owner. -->
+<!-- Brand asset: assets/family-bakery-logo.png supplied by the site owner. -->
 
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
@@ -10,7 +10,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Family Bakery | ፋሚሊ ዳቦ ቤት - Bethel, Addis Ababa</title>
-  <link rel="icon" type="image/png" href="family-bakery-logo.png" />
+  <link rel="icon" type="image/png" href="assets/family-bakery-logo.png" />
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -61,7 +61,7 @@
       overflow: hidden;
     }
     #site-atmosphere {
-      background-image: url("family-bakery-logo.png");
+      background-image: url("assets/family-bakery-logo.png");
       background-size: 330px auto;
       background-repeat: repeat;
       background-position: center;
@@ -149,7 +149,7 @@
         
     <!-- Brand Identity -->
     <a href="#hero" class="flex items-center gap-3 group" aria-label="Family Bakery home">
-      <img src="family-bakery-logo.png" alt="ፋሚሊ Family Bakery logo" class="brand-logo" />
+      <img src="assets/family-bakery-logo.png" alt="ፋሚሊ Family Bakery logo" class="brand-logo" />
     </a>
 
     <!-- Desktop Navigation Links -->
@@ -794,7 +794,7 @@
     <!-- Brand Info -->
     <div class="lg:col-span-4 space-y-4">
       <div class="flex items-center gap-3">
-        <img src="family-bakery-logo.png" alt="ፋሚሊ Family Bakery logo" class="footer-brand-logo" />
+        <img src="assets/family-bakery-logo.png" alt="ፋሚሊ Family Bakery logo" class="footer-brand-logo" />
       </div>
       <p data-i18n="footer_about" class="text-xs text-white/70 leading-relaxed max-w-sm">
         Serving fresh breads, artisan pastries, custom celebration cakes, and sweet treats daily in Bethel, Addis Ababa.
